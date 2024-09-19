@@ -6,6 +6,12 @@ function love.load()
     world = wf.newWorld(0, 0, true)
     world:setGravity(0, 800)
 
+    love.window.setMode(800, 600, {
+        resizable=true,
+        vsync=true,
+        minwidth=400,
+        minheight=300
+    })
     -- Carrega o mapa
     map = sti("mapa/mapa.lua")
     
