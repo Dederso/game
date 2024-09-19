@@ -32,6 +32,7 @@ function love.load()
     player.hitbox = world:newRectangleCollider(32, 3000, player.width, player.height)
     player.hitbox:setCollisionClass('Player')
     player.hitbox:setFixedRotation(true)
+    player.hitbox:setFriction(0)
     
     -- Cria colisões do mapa
     if map.layers["colision"] then
@@ -66,12 +67,13 @@ function love.update(dt)
         player.isOnGround = false
     end 
     
+    -- Aplica a velocidade horizontal sempre, mas mantém a velocidade vertical
     player.hitbox:setLinearVelocity(vx, vy)
 
     -- Verifica colisão com o chão
     player.isOnGround = false
-    local colliders = world:queryRectangleArea(px - player.width/2, py + player.height/2, player.width, 2, {'Ground'})
-    if #colliders > 0 then
+    local groundColliders = world:queryRectangleArea(px - player.width/2, py + player.height/2, player.width, 2, {'Ground'})
+    if #groundColliders > 0 then
         player.isOnGround = true    
     end
 
