@@ -25,8 +25,11 @@ function love.load()
     -- Definir classes de colisão
     world:addCollisionClass('Player')
     world:addCollisionClass('Ground')
+
     sprite_right = love.graphics.newImage("assets/Sprite_astronauta_right.png")
     sprite_left = love.graphics.newImage("assets/Sprite_astronauta_left.png")
+    sprite_jump = love.graphics.newImage("assets/Sprite_astronauta_jumping.png")
+
     player = {
         width = 32,
         height = 32,
@@ -36,6 +39,7 @@ function love.load()
         isOnGround = false,
         direction = 1  -- 1 para direita, -1 para esquerda
     }
+
     local x = map.width * map.tilewidth / 2
     local y = map.height * map.tileheight * 0.97
     player.hitbox = world:newRectangleCollider(x, y, player.width, player.height)
@@ -80,6 +84,9 @@ function love.update(dt)
         vy = -player.jumpForce
         player.isOnGround = false
     end 
+    if not player.isOnGround then
+        player.sprite = sprite_jump
+    end
     
     -- Aplica a velocidade horizontal sempre, mas mantém a velocidade vertical
     player.hitbox:setLinearVelocity(vx, vy)
@@ -128,8 +135,9 @@ function love.draw()
         else
             love.graphics.print("Mapa não carregado!", 400, 300)
         end
-        -- Desenha os objetos do mundo físico (opcional)
-    world:draw()
+
+    -- Desenha as hitbox do mundo físico (opcional)
+    -- world:draw()
 
 
     -- Desenha o sprite do jogador centralizado
