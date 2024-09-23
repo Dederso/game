@@ -52,6 +52,7 @@ function love.load()
         speed = 200,
         jumpForce = 700,
         isOnGround = false,
+        jumping = false,
         direction = 1  -- 1 para direita, -1 para esquerda
     }
 
@@ -98,6 +99,17 @@ function love.update(dt)
         vx = 0
     end
     
+    -- Movimento vertical do jogador (pulo) ===============================================================================
+    if player.jumping then
+        if player.direction == 1 then
+            player.sprite = sprite_jump_right
+            vx = player.speed
+        elseif player.direction == -1 then
+            player.sprite = sprite_jump_left
+            vx = -player.speed
+        end
+    end
+
     -- Pulo do jogador com 3 fases de carregamento ========================================================================
     if love.keyboard.isDown("space") or love.keyboard.isDown("w") then
         if player.isOnGround then
@@ -110,31 +122,41 @@ function love.update(dt)
         if player.isOnGround and player.jumpCharge and player.jumpCharge > 0 then
             if player.jumpCharge < 0.30 then
                 vy = -player.jumpForce * 0.5
+                vx = -player.speed * player.direction
+                player.jumping = true
             elseif player.jumpCharge < 0.60 then
                 vy = -player.jumpForce * 0.75
+                vx = -player.speed * player.direction
+                player.jumping = true
             else
                 vy = -player.jumpForce
+                vx = -player.speed * player.direction
+                player.jumping = true
             end
-            player.isOnGround = false
             player.jumpCharge = 0
+            player.jumping = true  
         end
+
     end
 
     if not player.isOnGround then
         if player.direction == 1 then
             player.sprite = sprite_jump_right
-            vx = player.speed
+            
         elseif player.direction == -1 then
             player.sprite = sprite_jump_left
-            vx = -player.speed
+            
         end
     end
+
+    
     
     -- Aplica a velocidade horizontal sempre, mas mantém a velocidade vertical
     player.hitbox:setLinearVelocity(vx, vy)
 
     -- Verifica colisão com o chão
     player.isOnGround = false
+    player.jumping = false
     local groundColliders = world:queryRectangleArea(px - player.width/2, py + player.height/2, player.width, 2, {'Ground'})
     if #groundColliders > 0 then
         player.isOnGround = true    
@@ -201,7 +223,7 @@ function love.draw()
 
     -- Adiciona texto de depuração
     love.graphics.print("FPS: " .. tostring(love.timer.getFPS()), 10, 10)
-    love.graphics.print("jump: " .. tostring(player.isOnGround), 10, 30)
+    love.graphics.print("jumping: " .. tostring(player.jumping), 10, 30)
     love.graphics.print("x: " .. tostring(player.hitbox:getX()), 10, 50)
     love.graphics.print("y: " .. tostring(player.hitbox:getY()), 10, 70)
 end
