@@ -69,10 +69,10 @@ function love.update(dt)
     local px, py = player.hitbox:getPosition()
 
     -- Movimento horizontal
-    if love.keyboard.isDown("left") then
+    if love.keyboard.isDown("right") or love.keyboard.isDown("a") then
         vx = -player.speed
         player.direction = -1
-    elseif love.keyboard.isDown("right") then
+    elseif love.keyboard.isDown("right") or love.keyboard.isDown("d") then
         vx = player.speed
         player.direction = 1
     else
@@ -80,7 +80,7 @@ function love.update(dt)
     end
     
     -- Pulo
-    if love.keyboard.isDown("up") and player.isOnGround then
+    if (love.keyboard.isDown("up") or love.keyboard.isDown("w")) and player.isOnGround then
         vy = -player.jumpForce
         player.isOnGround = false
     end 
@@ -98,12 +98,12 @@ function love.update(dt)
         player.isOnGround = true    
     end
 
+-- Configura a câmera para seguir o jogador ===================================================================
     camera:lookAt(px, py)
     local w = love.graphics.getWidth()
     local h = love.graphics.getHeight()
     local wt = map.width * map.tilewidth
     local ht = map.height * map.tileheight
-
 
     if camera.x < w/2 then
         camera.x = w/2
@@ -122,7 +122,7 @@ function love.update(dt)
     end
     
 end
-
+-- =================================================================================================================
 function love.draw()
     camera:attach()
         -- Desenha o mapa
@@ -137,7 +137,7 @@ function love.draw()
         end
 
     -- Desenha as hitbox do mundo físico (opcional)
-    -- world:draw()
+    world:draw()
 
 
     -- Desenha o sprite do jogador centralizado
@@ -156,6 +156,7 @@ function love.draw()
         spriteHeight / 2
     )
     camera:detach()
+
     -- Adiciona texto de depuração
     love.graphics.print("FPS: " .. tostring(love.timer.getFPS()), 10, 10)
     love.graphics.print("jump: " .. tostring(player.isOnGround), 10, 30)
