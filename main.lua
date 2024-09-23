@@ -89,6 +89,8 @@ function love.update(dt)
 
     -- Movimento horizontal do jogador (esquerda e direita) =================================================================
     if love.keyboard.isDown("left") or love.keyboard.isDown("a") then
+    -- Movimento horizontal
+    if love.keyboard.isDown("left") or love.keyboard.isDown("a") then
         vx = -player.speed
         player.direction = -1
     elseif love.keyboard.isDown("right") or love.keyboard.isDown("d") then
