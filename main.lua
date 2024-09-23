@@ -4,7 +4,7 @@ function love.load()
     cameralib = require "libraries/camera"
     camera = cameralib()
     world = wf.newWorld(0, 0, true)
-    world:setGravity(0, 980)
+    world:setGravity(0, 1000)
 
     love.window.setMode(800, 600, {
         resizable=true,
@@ -28,14 +28,19 @@ function love.load()
     sprite_right = love.graphics.newImage("assets/Sprite_astronauta_right.png")
     sprite_left = love.graphics.newImage("assets/Sprite_astronauta_left.png")
     player = {
-        width = 32,
+        width = 16,
         height = 32,
+        width_sprite = 32,
+        height_sprite = 32,
         sprite = sprite_right,
         speed = 200,
-        jumpForce = 500,
+        jumpForce = 600,
         isOnGround = false,
-        direction = 1  -- 1 para direita, -1 para esquerda
+        direction = 1,  -- 1 para direita, -1 para esquerda
+        coyoteTime = 0.1, -- tempo de tolerância em segundos
+        coyoteTimer = 0 -- timer do coyote time
     }
+   
     local x = map.width * map.tilewidth / 2
     local y = map.height * map.tileheight * 0.97
     player.hitbox = world:newRectangleCollider(x, y, player.width, player.height)
@@ -74,21 +79,36 @@ function love.update(dt)
     else
         vx = 0
     end
-    
-    -- Pulo
-    if love.keyboard.isDown("up") and player.isOnGround then
-        vy = -player.jumpForce
-        player.isOnGround = false
-    end 
-    
-    -- Aplica a velocidade horizontal sempre, mas mantém a velocidade vertical
-    player.hitbox:setLinearVelocity(vx, vy)
-
-    -- Verifica colisão com o chão
-    player.isOnGround = false
+      -- Verifica colisão com o chão
     local groundColliders = world:queryRectangleArea(px - player.width/2, py + player.height/2, player.width, 2, {'Ground'})
     if #groundColliders > 0 then
-        player.isOnGround = true    
+        player.isOnGround = true
+        lastGroundTime = love.timer.getTime()
+    else
+        player.isOnGround = false
+        local time = love.timer.getTime()
+        local lastTime
+        if(lastGroundTime ~= nil) then
+            lastTime = lastGroundTime
+        else
+            lastTime = player.coyoteTime+1
+        end
+        player.coyoteTimer = time - lastTime
+    end
+    
+    
+
+    -- Pulo com coyote time
+    if love.keyboard.isDown("up")then 
+       if player.isOnGround then
+            vy = -player.jumpForce
+            player.coyoteTimer = 0
+       else
+            if player.coyoteTimer <= player.coyoteTime then
+                vy = -player.jumpForce
+                player.lastGroundTime = love.timer.getTime()
+            end
+       end
     end
 
     camera:lookAt(px, py)
@@ -113,7 +133,9 @@ function love.update(dt)
     if camera.y > (ht - h/2) then
         camera.y = (ht - h/2)
     end
-    
+     -- Aplica a velocidade horizontal sempre, mas mantém a velocidade vertical
+     player.hitbox:setLinearVelocity(vx, vy)
+
 end
 
 function love.draw()
@@ -135,8 +157,8 @@ function love.draw()
     -- Desenha o sprite do jogador centralizado
     local spriteWidth = player.sprite:getWidth()
     local spriteHeight = player.sprite:getHeight()
-    local scaleX = player.width / spriteWidth
-    local scaleY = player.height / spriteHeight
+    local scaleX = player.width_sprite / spriteWidth
+    local scaleY = player.height_sprite / spriteHeight
     love.graphics.draw(
         player.sprite,
         player.hitbox:getX(),
@@ -153,6 +175,9 @@ function love.draw()
     love.graphics.print("jump: " .. tostring(player.isOnGround), 10, 30)
     love.graphics.print("x: " .. tostring(player.hitbox:getX()), 10, 50)
     love.graphics.print("y: " .. tostring(player.hitbox:getY()), 10, 70)
+    --printa o tempo desde que o jogador deixou o chão a contagem do tempo e o tempo armazenado no lastGroundTime
+    love.graphics.print("lastGroundTime: " .. tostring(player.coyoteTimer), 10, 110)
+    
 end
 
 function love.keypressed(key)
