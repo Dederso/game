@@ -50,7 +50,7 @@ function love.load()
         height = 64,
         sprite = sprite_right,
         speed = 200,
-        jumpForce = 600,
+        jumpForce = 700,
         isOnGround = false,
         direction = 1  -- 1 para direita, -1 para esquerda
     }
@@ -88,12 +88,10 @@ function love.update(dt)
     local px, py = player.hitbox:getPosition()
 
     -- Movimento horizontal do jogador (esquerda e direita) =================================================================
-    if love.keyboard.isDown("left") or love.keyboard.isDown("a") then
-    -- Movimento horizontal
-    if love.keyboard.isDown("left") or love.keyboard.isDown("a") then
+    if (love.keyboard.isDown("left") or love.keyboard.isDown("a")) and player.isOnGround then
         vx = -player.speed
         player.direction = -1
-    elseif love.keyboard.isDown("right") or love.keyboard.isDown("d") then
+    elseif (love.keyboard.isDown("right") or love.keyboard.isDown("d")) and player.isOnGround then
         vx = player.speed
         player.direction = 1
     else
@@ -110,9 +108,9 @@ function love.update(dt)
         end
     else
         if player.isOnGround and player.jumpCharge and player.jumpCharge > 0 then
-            if player.jumpCharge < 0.33 then
+            if player.jumpCharge < 0.30 then
                 vy = -player.jumpForce * 0.5
-            elseif player.jumpCharge < 0.66 then
+            elseif player.jumpCharge < 0.60 then
                 vy = -player.jumpForce * 0.75
             else
                 vy = -player.jumpForce
@@ -125,9 +123,10 @@ function love.update(dt)
     if not player.isOnGround then
         if player.direction == 1 then
             player.sprite = sprite_jump_right
-            player.speed = 200
+            vx = player.speed
         elseif player.direction == -1 then
             player.sprite = sprite_jump_left
+            vx = -player.speed
         end
     end
     
@@ -141,7 +140,7 @@ function love.update(dt)
         player.isOnGround = true    
     end
 
--- Configura a câmera para seguir o jogador ===================================================================
+    -- Configura a câmera para seguir o jogador ===================================================================
     camera:lookAt(px, py)
     local w = love.graphics.getWidth()
     local h = love.graphics.getHeight()
@@ -212,3 +211,4 @@ function love.keypressed(key)
         love.event.quit()
     end
 end
+
