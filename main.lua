@@ -7,16 +7,26 @@ function love.load()
     world = wf.newWorld(0, 0, true)
     world:setGravity(0, 980)
 
+    -- Lista de resoluções suportadas
+    resolutions = {
+        {width = 1920, height = 1080}, -- Resolução mais alta
+        {width = 1600, height = 900}, -- Resolução média
+        {width = 1366, height = 768}, -- Resolução mais baixa
+        {width = 1280, height = 720}, -- Resolução mais baixa
+        {width = 1024, height = 576} -- Resolução mais baixa
+    }
+
 -- Configura a janela do jogo ================================================================================================
-    love.window.setMode(800, 600, {
+    resolution = resolutions[1]
+    love.window.setMode(resolution.width, resolution.height, {
         resizable=true,
         vsync=true,
         minwidth=400,
         minheight=300
     })
+
 -- Carrega o mapa ===========================================================================================================
-    map = sti("mapa/mapa.lua")
-    
+    map = sti("mapa/mapa.lua")    
 -- Verifica se o mapa foi carregado corretamente
     if not map then
         print("Erro ao carregar o mapa!")
@@ -40,7 +50,7 @@ function love.load()
         height = 64,
         sprite = sprite_right,
         speed = 200,
-        jumpForce = 500,
+        jumpForce = 600,
         isOnGround = false,
         direction = 1  -- 1 para direita, -1 para esquerda
     }
@@ -64,18 +74,21 @@ function love.load()
     
 end
 
+-- Atualiza o jogo ==========================================================================================================
 function love.update(dt)
+    -- Atualiza o mundo físico =================================================================================================
     world:update(dt)
     if player.direction == 1 then
         player.sprite = sprite_right
     elseif player.direction == -1 then
         player.sprite = sprite_left
     end
+    -- Movimento do jogador ===============================================================================================
     local vx, vy = player.hitbox:getLinearVelocity()
     local px, py = player.hitbox:getPosition()
 
-    -- Movimento horizontal
-    if love.keyboard.isDown("right") or love.keyboard.isDown("a") then
+    -- Movimento horizontal do jogador (esquerda e direita) =================================================================
+    if love.keyboard.isDown("left") or love.keyboard.isDown("a") then
         vx = -player.speed
         player.direction = -1
     elseif love.keyboard.isDown("right") or love.keyboard.isDown("d") then
@@ -85,11 +98,28 @@ function love.update(dt)
         vx = 0
     end
     
-    -- Pulo
-    if (love.keyboard.isDown("up") or love.keyboard.isDown("w")) and player.isOnGround then
-        vy = -player.jumpForce
-        player.isOnGround = false
-    end 
+    -- Pulo do jogador com 3 fases de carregamento ========================================================================
+    if love.keyboard.isDown("up") or love.keyboard.isDown("w") then
+        if player.isOnGround then
+            player.jumpCharge = (player.jumpCharge or 0) + dt
+            if player.jumpCharge > 1 then
+                player.jumpCharge = 1
+            end
+        end
+    else
+        if player.isOnGround and player.jumpCharge and player.jumpCharge > 0 then
+            if player.jumpCharge < 0.33 then
+                vy = -player.jumpForce * 0.5
+            elseif player.jumpCharge < 0.66 then
+                vy = -player.jumpForce * 0.75
+            else
+                vy = -player.jumpForce
+            end
+            player.isOnGround = false
+            player.jumpCharge = 0
+        end
+    end
+
     if not player.isOnGround then
         if player.direction == 1 then
             player.sprite = sprite_jump_right
