@@ -1,4 +1,5 @@
 function love.load()
+-- Importa as bibliotecas ====================================================================================================
     wf = require "libraries/windfield"
     sti = require "libraries/sti"
     cameralib = require "libraries/camera"
@@ -6,33 +7,37 @@ function love.load()
     world = wf.newWorld(0, 0, true)
     world:setGravity(0, 980)
 
+-- Configura a janela do jogo ================================================================================================
     love.window.setMode(800, 600, {
         resizable=true,
         vsync=true,
         minwidth=400,
         minheight=300
     })
-    -- Carrega o mapa
+-- Carrega o mapa ===========================================================================================================
     map = sti("mapa/mapa.lua")
     
-    -- Verifica se o mapa foi carregado corretamente
+-- Verifica se o mapa foi carregado corretamente
     if not map then
         print("Erro ao carregar o mapa!")
         love.event.quit()
         return
     end
 
-    -- Definir classes de colisão
+-- Definir classes de colisão ===============================================================================================
     world:addCollisionClass('Player')
     world:addCollisionClass('Ground')
 
+-- Carrega os sprites do jogador ============================================================================================
     sprite_right = love.graphics.newImage("assets/Sprite_astronauta_right.png")
     sprite_left = love.graphics.newImage("assets/Sprite_astronauta_left.png")
-    sprite_jump = love.graphics.newImage("assets/Sprite_astronauta_jumping.png")
+    sprite_jump_right = love.graphics.newImage("assets/Sprite_astronauta_jumping_right.png")
+    sprite_jump_left = love.graphics.newImage("assets/Sprite_astronauta_jumping_left.png")
 
+-- Cria o jogador ===========================================================================================================
     player = {
-        width = 32,
-        height = 32,
+        width = 64,
+        height = 64,
         sprite = sprite_right,
         speed = 200,
         jumpForce = 500,
@@ -40,14 +45,15 @@ function love.load()
         direction = 1  -- 1 para direita, -1 para esquerda
     }
 
+-- Cria a hitbox do jogador =================================================================================================
     local x = map.width * map.tilewidth / 2
-    local y = map.height * map.tileheight * 0.97
+    local y = map.height * map.tileheight * 0.96
     player.hitbox = world:newRectangleCollider(x, y, player.width, player.height)
     player.hitbox:setCollisionClass('Player')
     player.hitbox:setFixedRotation(true)
     player.hitbox:setFriction(0)
     
-    -- Cria colisões do mapa
+-- Cria colisões do mapa ================================================================================================
     if map.layers["colision"] then
         for _, object in ipairs(map.layers["colision"].objects) do
             local collider = world:newRectangleCollider(object.x, object.y, object.width, object.height)
@@ -85,7 +91,11 @@ function love.update(dt)
         player.isOnGround = false
     end 
     if not player.isOnGround then
-        player.sprite = sprite_jump
+        if player.direction == 1 then
+            player.sprite = sprite_jump_right
+        elseif player.direction == -1 then
+            player.sprite = sprite_jump_left
+        end
     end
     
     -- Aplica a velocidade horizontal sempre, mas mantém a velocidade vertical

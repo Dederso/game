@@ -7,7 +7,8 @@
     ],
     "fileStates": {
         "": {
-            "scaleInDock": 1
+            "scaleInDock": 1.5,
+            "scaleInEditor": 1
         },
         "mapa/assets/Background-1-sky.tsx": {
             "dynamicWrapping": false,
@@ -43,12 +44,18 @@
             "dynamicWrapping": false,
             "scaleInDock": 1
         },
+        "mapa/assets/mapa.tmx#Tree_SpriteSheet": {
+            "scaleInEditor": 1
+        },
+        "mapa/assets/mapa.tmx#Tree_SpriteSheet_Outlined": {
+            "dynamicWrapping": false
+        },
         "mapa/assets/teste.tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 1
         }
     },
-    "last.imagePath": "C:/Users/gmant/OneDrive/Documentos/UFES/PAP/game/mapa/assets/Background",
+    "last.imagePath": "C:/Users/gmant/OneDrive/Documentos/UFES/PAP/game/mapa/assets",
     "openFiles": [
         "mapa/assets/mapa.tmx"
     ],
@@ -63,5 +70,9 @@
     ],
     "tileset.embedInMap": true,
     "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 128,
+        "width": 128
+    },
     "tileset.type": 0
 }
