@@ -99,7 +99,7 @@ function love.update(dt)
     end
     
     -- Pulo do jogador com 3 fases de carregamento ========================================================================
-    if love.keyboard.isDown("up") or love.keyboard.isDown("w") then
+    if love.keyboard.isDown("space") or love.keyboard.isDown("w") then
         if player.isOnGround then
             player.jumpCharge = (player.jumpCharge or 0) + dt
             if player.jumpCharge > 1 then
@@ -123,6 +123,7 @@ function love.update(dt)
     if not player.isOnGround then
         if player.direction == 1 then
             player.sprite = sprite_jump_right
+            player.speed = 200
         elseif player.direction == -1 then
             player.sprite = sprite_jump_left
         end
