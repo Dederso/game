@@ -36,10 +36,10 @@ function love.load()
 
 -- Cria o jogador ===========================================================================================================
     player = {
-        width = 16,
-        height = 32,
-        width_sprite = 32,
-        height_sprite = 32,
+        width = 32,
+        height = 64,
+        width_sprite = 64,
+        height_sprite = 64,
         sprite = sprite_right,
         speed = 200,
         jumpForce = 600,
