@@ -57,7 +57,7 @@ function love.load()
 -- Definir classes de colisão ===============================================================================================
     world:addCollisionClass('Player')
     world:addCollisionClass('Ground')
-    world:addCollisionClass('objetivo extra 1')
+    world:addCollisionClass('objetivo extra 1',{ignores = {'Player'}})
 -- Carrega os sprites do jogador ============================================================================================
     sprites = {
         idle_right = love.graphics.newImage("assets/Sprite_astronauta_idle_right.png"),
@@ -92,7 +92,7 @@ function love.load()
         direction = 1,  -- 1 para direita, -1 para esquerda
         currentSprite = sprites.idle_right,
         animationState = "idle",
-        extra_objetivo = {[1]=false, [2]=false, [3]=false}
+        extra_objetivo = 0
     }
 
 -- Cria a hitbox do jogador =================================================================================================
@@ -111,10 +111,14 @@ function love.load()
             collider:setCollisionClass('Ground')
         end
     end
+    -- Adicione esta linha para armazenar os coletáveis
+    objetivosExtras = {}
     if map.layers["objetivo extra 1"] then
         for _, object in ipairs(map.layers["objetivo extra 1"].objects) do
             local collider = world:newRectangleCollider(object.x, object.y, object.width, object.height)
             collider:setCollisionClass('objetivo extra 1')
+            collider:setType("static")
+            table.insert(objetivosExtras, {collider = collider, collected = false,w= object.width, h= object.height})
         end
     end
     -- Adicione isso ao final da função love.load()
@@ -124,18 +128,7 @@ function love.load()
     -- Adicione estas variáveis globais no início do arquivo, após a declaração das resoluções
     currentResolutionIndex = 1
     isFullscreen = true
-
-    -- Adicione esta linha para armazenar os coletáveis
-    objetivosExtras = {}
-
-    -- Modifique esta parte para criar os coletáveis
-    if map.layers["objetivo extra 1"] then
-        for _, object in ipairs(map.layers["objetivo extra 1"].objects) do
-            local collider = world:newRectangleCollider(object.x, object.y, object.width, object.height)
-            collider:setCollisionClass('objetivo extra 1')
-            table.insert(objetivosExtras, {collider = collider, collected = false})
-        end
-    end
+    
 end
 
 -- Função para verificar colisões laterais
@@ -188,7 +181,7 @@ function love.update(dt)
                     if player.hitbox:getEnterCollisionData('objetivo extra 1').collider == objetivo.collider then
                         objetivo.collected = true
                         objetivo.collider:destroy()
-                        player.extra_objetivo[1] = true
+                        player.extra_objetivo = player.extra_objetivo + 1
                         break
                     end
                 end
@@ -338,10 +331,16 @@ function love.draw()
             -- Desenha o mapa
             if map then
                 for i, layer in ipairs(map.layers) do
-                    if layer.name == "objetivo extra 1" and player.extra_objetivo[1] == false then
+                    if layer.name ~= "colision" and layer.name ~= "objetivo extra 1" then
                         layer:draw()
-                    elseif layer.name ~= "colision" and layer.name ~= "objetivo extra 1" then -- mudei pra poder ver as colisoes dps só por o nome correto "colision"
-                        layer:draw()
+                    elseif layer.name == "objetivo extra 1" then
+                        -- Desenha apenas os objetivos não coletados
+                        for j, objeto in ipairs(objetivosExtras) do
+                            if not objeto.collected then
+                                local x, y = objeto.collider:getPosition()
+                                love.graphics.rectangle("fill", x, y, objeto.w, objeto.h)
+                            end
+                        end
                     end
                 end
             else
@@ -384,7 +383,7 @@ function love.draw()
         -- Resetar a cor
         love.graphics.rectangle("fill", 10, love.graphics.getHeight() - 30, jumpChargeBarWidth * (player.jumpCharge or 0), jumpChargeBarHeight)
         love.graphics.setColor(0, 0, 0)
-        love.graphics.print("objetivo extra 1: " .. tostring(player.extra_objetivo[1]), 10, love.graphics.getHeight() - 60)
+        love.graphics.print("objetivo extra: " .. tostring(player.extra_objetivo), 10, 20)
         love.graphics.setColor(1, 1, 1)
     elseif gameState == "menu" then
         -- Desenhe o menu
@@ -504,7 +503,7 @@ function reiniciarJogo()
     -- Redefine as classes de colisão
     world:addCollisionClass('Player')
     world:addCollisionClass('Ground')
-
+    world:addCollisionClass('objetivo extra 1',{ignores = {'Player'}})
     -- Recria o jogador
     local x = map.width * map.tilewidth / 2
     local y = map.height * map.tileheight * 0.96
@@ -515,13 +514,22 @@ function reiniciarJogo()
     player.direction = 1
     player.sprite = sprites.idle_right
     player.jumpCharge = 0
-
+    player.extra_objetivo = 0
     -- Recria as colisões do mapa
     if map.layers["colision"] then
         for _, object in ipairs(map.layers["colision"].objects) do
             local collider = world:newRectangleCollider(object.x, object.y, object.width, object.height)
             collider:setType("static")
             collider:setCollisionClass('Ground')
+        end
+    end
+    objetivosExtras = {}
+    if map.layers["objetivo extra 1"] then
+        for _, object in ipairs(map.layers["objetivo extra 1"].objects) do
+            local collider = world:newRectangleCollider(object.x, object.y, object.width, object.height)
+            collider:setCollisionClass('objetivo extra 1')
+            collider:setType("static")
+            table.insert(objetivosExtras, {collider = collider, collected = false,w= object.width, h= object.height})
         end
     end
 end
