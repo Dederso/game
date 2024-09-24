@@ -165,6 +165,11 @@ function love.update(dt)
     -- Movimento do jogador ===============================================================================================
     local vx, vy = player.hitbox:getLinearVelocity()
     local px, py = player.hitbox:getPosition()
+    if(py <=640) then
+        world:setGravity(0, 400)
+    else
+        world:setGravity(0, 1000)
+    end
     if(player.hitbox:enter("objetivo extra 1")) then
         for i, objetivo in ipairs(objetivosExtras) do
             if not objetivo.collected and player.hitbox:enter('objetivo extra 1') then
