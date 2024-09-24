@@ -104,6 +104,10 @@ function love.load()
     -- Adicione isso ao final da função love.load()
     jumpChargeBarWidth = 100
     jumpChargeBarHeight = 10
+
+    -- Adicione estas variáveis globais no início do arquivo, após a declaração das resoluções
+    currentResolutionIndex = 1
+    isFullscreen = true
 end
 
 -- Função para verificar colisões laterais
@@ -335,7 +339,7 @@ end
 
 -- Função para redimensionar a janela =======================================================================================
 function love.resize(w, h)
-    camera:resize(w, h)
+    atualizarCamera()
 end
 
 -- Função para fechar o jogo ===============================================================================================
@@ -344,6 +348,67 @@ function love.keypressed(key)
         love.event.quit()
     elseif key == "r" then
         reiniciarJogo()
+    elseif key == "t" then
+        mudarResolucao()
+    elseif key == "f" then
+        alternarTelaCheia()
+    end
+end
+
+-- Adicione estas novas funções no final do arquivo
+function mudarResolucao()
+    currentResolutionIndex = (currentResolutionIndex % #resolutions) + 1
+    local newResolution = resolutions[currentResolutionIndex]
+    love.window.setMode(newResolution.width, newResolution.height, {
+        fullscreen = isFullscreen,
+        resizable = true,
+        vsync = true,
+        minwidth = 400,
+        minheight = 300
+    })
+    atualizarCamera()
+end
+
+function alternarTelaCheia()
+    isFullscreen = not isFullscreen
+    love.window.setFullscreen(isFullscreen)
+    if not isFullscreen then
+        local currentResolution = resolutions[currentResolutionIndex]
+        love.window.setMode(currentResolution.width, currentResolution.height, {
+            fullscreen = false,
+            resizable = true,
+            vsync = true,
+            minwidth = 400,
+            minheight = 300
+        })
+    end
+    atualizarCamera()
+end
+
+function atualizarCamera()
+    local w, h = love.graphics.getDimensions()
+    -- Atualiza a posição da câmera para o centro da tela
+    local px, py = player.hitbox:getPosition()
+    camera:lookAt(px, py)
+
+    -- Ajusta os limites da câmera
+    local wt = map.width * map.tilewidth
+    local ht = map.height * map.tileheight
+
+    if camera.x < w/2 then
+        camera.x = w/2
+    end
+
+    if camera.y < h/2 then
+        camera.y = h/2
+    end
+
+    if camera.x > (wt - w/2) then
+        camera.x = (wt - w/2)
+    end
+    
+    if camera.y > (ht - h/2) then
+        camera.y = (ht - h/2)
     end
 end
 
