@@ -222,11 +222,7 @@ function love.draw()
             love.graphics.print("Mapa não carregado!", 400, 300)
         end
 
-    -- Desenha as hitbox do mundo físico (opcional) ========================================================================
-    -- world:draw()
-
-
-    -- Desenha o sprite do jogador centralizado
+    -- Desenha o sprite do jogador centralizado na hitbox ===================================================================
     local spriteWidth = player.sprite:getWidth()
     local spriteHeight = player.sprite:getHeight()
     local scaleX = player.width_sprite / spriteWidth
@@ -244,6 +240,7 @@ function love.draw()
     camera:detach()
 
     -- Adiciona texto de depuração ===========================================================================================
+    world:draw() -- Desenha as hitboxes
     love.graphics.print("FPS: " .. tostring(love.timer.getFPS()), 10, 10)
     love.graphics.print("jumping: " .. tostring(player.jumping), 10, 30)
     love.graphics.print("x: " .. tostring(player.hitbox:getX()), 10, 50)
@@ -251,6 +248,12 @@ function love.draw()
 
 end
 
+-- Função para redimensionar a janela =======================================================================================
+function love.resize(w, h)
+    camera:resize(w, h)
+end
+
+-- Função para fechar o jogo ===============================================================================================
 function love.keypressed(key)
     if key == "escape" then
         love.event.quit()
