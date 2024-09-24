@@ -1,4 +1,10 @@
 function love.load()
+
+-- Configurações iniciais do jogo ==========================================================================================
+love.window.setTitle("Jogo de Plataforma")
+love.graphics.setBackgroundColor(0.5, 0.5, 0.5)
+love.graphics.setDefaultFilter("nearest", "nearest")
+
 -- Importa as bibliotecas ====================================================================================================
     wf = require "libraries/windfield"
     sti = require "libraries/sti"
@@ -11,13 +17,14 @@ function love.load()
     resolutions = {
         {width = 1920, height = 1080}, -- Resolução mais alta
         {width = 1600, height = 900}, -- Resolução média
-        {width = 1366, height = 768}, -- Resolução mais baixa
-        {width = 1280, height = 720}, -- Resolução mais baixa
         {width = 1024, height = 576} -- Resolução mais baixa
     }
+    baixa = resolutions[3]
+    media = resolutions[2]
+    alta = resolutions[1]
 
 -- Configura a janela do jogo ================================================================================================
-    resolution = resolutions[1]
+    resolution = alta
     love.window.setMode(resolution.width, resolution.height, {
         resizable=true,
         vsync=true,
@@ -186,7 +193,7 @@ function love.update(dt)
     end
     
 end
--- =================================================================================================================
+-- Desenha o jogo ===========================================================================================================
 function love.draw()
     camera:attach()
         -- Desenha o mapa
@@ -200,8 +207,8 @@ function love.draw()
             love.graphics.print("Mapa não carregado!", 400, 300)
         end
 
-    -- Desenha as hitbox do mundo físico (opcional)
-    world:draw()
+    -- Desenha as hitbox do mundo físico (opcional) ========================================================================
+    -- world:draw()
 
 
     -- Desenha o sprite do jogador centralizado
@@ -221,7 +228,7 @@ function love.draw()
     )
     camera:detach()
 
-    -- Adiciona texto de depuração
+    -- Adiciona texto de depuração ===========================================================================================
     love.graphics.print("FPS: " .. tostring(love.timer.getFPS()), 10, 10)
     love.graphics.print("jumping: " .. tostring(player.jumping), 10, 30)
     love.graphics.print("x: " .. tostring(player.hitbox:getX()), 10, 50)
