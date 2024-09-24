@@ -46,8 +46,12 @@ love.graphics.setDefaultFilter("nearest", "nearest")
     world:addCollisionClass('Ground')
 
 -- Carrega os sprites do jogador ============================================================================================
-    sprite_right = love.graphics.newImage("assets/Sprite_astronauta_right.png")
-    sprite_left = love.graphics.newImage("assets/Sprite_astronauta_left.png")
+    sprite_right_idle = love.graphics.newImage("assets/Sprite_astronauta_idle_right.png")
+    sprite_left_idle = love.graphics.newImage("assets/Sprite_astronauta_idle_left.png")
+    sprite_right_runing_1 = love.graphics.newImage("assets/Sprite_astronauta_running_right_1.png")
+    sprite_right_runing_2 = love.graphics.newImage("assets/Sprite_astronauta_running_right_2.png")
+    sprite_left_runing_1 = love.graphics.newImage("assets/Sprite_astronauta_running_left_1.png")
+    sprite_left_runing_2 = love.graphics.newImage("assets/Sprite_astronauta_running_left_2.png")
     sprite_jump_right = love.graphics.newImage("assets/Sprite_astronauta_jumping_right.png")
     sprite_jump_left = love.graphics.newImage("assets/Sprite_astronauta_jumping_left.png")
 
@@ -124,6 +128,31 @@ function love.update(dt)
     -- Movimento do jogador ===============================================================================================
     local vx, vy = player.hitbox:getLinearVelocity()
     local px, py = player.hitbox:getPosition()
+
+    -- animação do jogador correndo =================================================================================================
+    if player.isOnGround then
+        if player.direction == 1 then
+            if vx > 0 then
+                if dt % 2 == 0 then
+                    player.sprite = sprite_right_runing_1
+                else
+                    player.sprite = sprite_right_runing_2
+                end
+            else
+                player.sprite = sprite_right_idle
+            end
+        elseif player.direction == -1 then
+            if vx < 0 then
+                if dt % 2 == 0 then
+                    player.sprite = sprite_left_runing_1
+                else
+                    player.sprite = sprite_left_runing_2
+                end
+            else
+                player.sprite = sprite_left_idle
+            end
+        end
+    end
 
     -- Movimento horizontal do jogador (esquerda e direita) =================================================================
     if (love.keyboard.isDown("left") or love.keyboard.isDown("a")) and player.isOnGround then
