@@ -10,6 +10,7 @@ Siga os passos abaixo para rodar o programa:
     - Baixe e instale o Lua a partir do [site oficial](https://www.lua.org/download.html).
 
 2. **Instale o LOVE2D:**
+    - Baixe e instale o LOVE2D apartir do [site oficial](https://love2d.org).
 
 2. **Clone o Repositório:**
     ```sh
