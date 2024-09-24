@@ -11,7 +11,7 @@ love.graphics.setDefaultFilter("nearest", "nearest")
     cameralib = require "libraries/camera"
     camera = cameralib()
     world = wf.newWorld(0, 0, true)
-    world:setGravity(0, 980)
+    world:setGravity(0, 1000)
 
     -- Lista de resoluções suportadas
     resolutions = {
@@ -53,14 +53,18 @@ love.graphics.setDefaultFilter("nearest", "nearest")
 
 -- Cria o jogador ===========================================================================================================
     player = {
-        width = 64,
-        height = 64,
+        width = 32,
+        height = 63, --um pixel menos para que ele nao fique colidindo com 2 tiles para cima
+        width_sprite = 64,
+        height_sprite = 64,
         sprite = sprite_right,
         speed = 200,
         jumpForce = 700,
         isOnGround = false,
         jumping = false,
-        direction = 1  -- 1 para direita, -1 para esquerda
+        direction = 1,  -- 1 para direita, -1 para esquerda
+        coyoteTime = 0.1, -- tempo de tolerância em segundos
+        coyoteTimer = 0 -- timer do coyote time
     }
 
 -- Cria a hitbox do jogador =================================================================================================
@@ -102,8 +106,6 @@ function love.update(dt)
     elseif (love.keyboard.isDown("right") or love.keyboard.isDown("d")) and player.isOnGround then
         vx = player.speed
         player.direction = 1
-    else
-        vx = 0
     end
     
     -- Movimento vertical do jogador (pulo) ===============================================================================
@@ -118,7 +120,7 @@ function love.update(dt)
     end
 
     -- Pulo do jogador com 3 fases de carregamento ========================================================================
-    if love.keyboard.isDown("space") or love.keyboard.isDown("w") then
+    if love.keyboard.isDown("space") or love.keyboard.isDown("w") or love.keyboard.isDown("up") then
         if player.isOnGround then
             player.jumpCharge = (player.jumpCharge or 0) + dt
             if player.jumpCharge > 1 then
@@ -133,11 +135,11 @@ function love.update(dt)
                 player.jumping = true
             elseif player.jumpCharge < 0.60 then
                 vy = -player.jumpForce * 0.75
-                vx = -player.speed * player.direction
+                vx = player.speed * player.direction
                 player.jumping = true
             else
                 vy = -player.jumpForce
-                vx = -player.speed * player.direction
+                vx = player.speed * player.direction
                 player.jumping = true
             end
             player.jumpCharge = 0
@@ -166,8 +168,21 @@ function love.update(dt)
     player.jumping = false
     local groundColliders = world:queryRectangleArea(px - player.width/2, py + player.height/2, player.width, 2, {'Ground'})
     if #groundColliders > 0 then
-        player.isOnGround = true    
+        player.isOnGround = true
+        lastGroundTime = love.timer.getTime()
+    else
+        player.isOnGround = false
+        local time = love.timer.getTime()
+        local lastTime
+        if(lastGroundTime ~= nil) then
+            lastTime = lastGroundTime
+        else
+            lastTime = player.coyoteTime+1
+        end
+        player.coyoteTimer = time - lastTime
     end
+    
+    
 
     -- Configura a câmera para seguir o jogador ===================================================================
     camera:lookAt(px, py)
@@ -214,8 +229,8 @@ function love.draw()
     -- Desenha o sprite do jogador centralizado
     local spriteWidth = player.sprite:getWidth()
     local spriteHeight = player.sprite:getHeight()
-    local scaleX = player.width / spriteWidth
-    local scaleY = player.height / spriteHeight
+    local scaleX = player.width_sprite / spriteWidth
+    local scaleY = player.height_sprite / spriteHeight
     love.graphics.draw(
         player.sprite,
         player.hitbox:getX(),
@@ -233,6 +248,7 @@ function love.draw()
     love.graphics.print("jumping: " .. tostring(player.jumping), 10, 30)
     love.graphics.print("x: " .. tostring(player.hitbox:getX()), 10, 50)
     love.graphics.print("y: " .. tostring(player.hitbox:getY()), 10, 70)
+
 end
 
 function love.keypressed(key)
