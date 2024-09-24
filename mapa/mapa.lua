@@ -9,8 +9,8 @@ return {
   height = 100,
   tilewidth = 32,
   tileheight = 32,
-  nextlayerid = 13,
-  nextobjectid = 88,
+  nextlayerid = 14,
+  nextobjectid = 90,
   properties = {},
   tilesets = {
     {
@@ -1315,6 +1315,35 @@ return {
           y = 2464,
           width = 32,
           height = 32,
+          rotation = 0,
+          visible = true,
+          properties = {}
+        }
+      }
+    },
+    {
+      type = "objectgroup",
+      draworder = "topdown",
+      id = 13,
+      name = "objetivo final",
+      class = "",
+      visible = true,
+      opacity = 1,
+      offsetx = 0,
+      offsety = 0,
+      parallaxx = 1,
+      parallaxy = 1,
+      properties = {},
+      objects = {
+        {
+          id = 88,
+          name = "chegada",
+          type = "",
+          shape = "rectangle",
+          x = 1404.36,
+          y = 42.6667,
+          width = 288,
+          height = 128,
           rotation = 0,
           visible = true,
           properties = {}

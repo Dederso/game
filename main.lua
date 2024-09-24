@@ -2,6 +2,9 @@
 local gameState = "menu"
 local menuOptions = {"Jogar", "Sair"}
 local selectedOption = 1
+local tempoInicio = 0
+local tempoFinal = 0
+local jogoFinalizado = false
 
 -- Modifique a função love.load() existente
 function love.load()
@@ -58,6 +61,7 @@ function love.load()
     world:addCollisionClass('Player')
     world:addCollisionClass('Ground')
     world:addCollisionClass('objetivo extra 1',{ignores = {'Player'}})
+    world:addCollisionClass('objetivo final',{ignores = {'Player'}})
 -- Carrega os sprites do jogador ============================================================================================
     sprites = {
         idle_right = love.graphics.newImage("assets/Sprite_astronauta_idle_right.png"),
@@ -121,6 +125,14 @@ function love.load()
             table.insert(objetivosExtras, {collider = collider, collected = false,w= object.width, h= object.height})
         end
     end
+    if map.layers["objetivo final"] then
+        for _, object in ipairs(map.layers["objetivo final"].objects) do
+            local collider = world:newRectangleCollider(object.x, object.y, object.width, object.height)
+            collider:setCollisionClass('objetivo final')
+            collider:setType("static")
+            table.insert(objetivosExtras, {collider = collider,w= object.width, h= object.height})
+        end
+    end
     -- Adicione isso ao final da função love.load()
     jumpChargeBarWidth = 100
     jumpChargeBarHeight = 10
@@ -129,6 +141,8 @@ function love.load()
     currentResolutionIndex = 1
     isFullscreen = true
     
+    tempoInicio = love.timer.getTime()
+    jogoFinalizado = false
 end
 
 -- Função para verificar colisões laterais
@@ -158,7 +172,7 @@ end
 
 -- Atualiza o jogo ==========================================================================================================
 function love.update(dt)
-    if gameState == "playing" then
+    if gameState == "playing" and not jogoFinalizado then
         -- Seu código de atualização do jogo existente aqui
         -- Atualiza o mundo físico =================================================================================================
         world:update(dt)
@@ -310,7 +324,15 @@ function love.update(dt)
                 vx = -vx
             end
         end
-
+        if player.hitbox:enter("objetivo final") then
+            for _, objetivo in ipairs(objetivosExtras) do
+                if player.hitbox:getEnterCollisionData('objetivo final').collider == objetivo.collider then
+                    tempoFinal = love.timer.getTime() - tempoInicio
+                    jogoFinalizado = true
+                    break
+                end
+            end
+        end
          -- Aplica a velocidade horizontal sempre, mas mantém a velocidade vertical atual se houver colisão lateral ========
          player.hitbox:setLinearVelocity(vx, vy)
     elseif gameState == "menu" then
@@ -385,6 +407,10 @@ function love.draw()
         love.graphics.setColor(0, 0, 0)
         love.graphics.print("objetivo extra: " .. tostring(player.extra_objetivo), 10, 20)
         love.graphics.setColor(1, 1, 1)
+
+        if jogoFinalizado then
+            fimDeJogo()
+        end
     elseif gameState == "menu" then
         -- Desenhe o menu
         love.graphics.setFont(menuFont)
@@ -406,7 +432,17 @@ end
 
 -- Função para fechar o jogo ===============================================================================================
 function love.keypressed(key)
-    if gameState == "menu" then
+    if jogoFinalizado then
+        if key == "r" then
+            jogoFinalizado = false
+            tempoInicio = love.timer.getTime()
+            tempoFinal = 0
+            reiniciarJogo()      
+        elseif key == "escape" then
+            gameState = "menu"
+            jogoFinalizado = false
+        end
+    elseif gameState == "menu" then
         if key == "return" then
             if selectedOption == 1 then
                 gameState = "playing"
@@ -532,5 +568,25 @@ function reiniciarJogo()
             table.insert(objetivosExtras, {collider = collider, collected = false,w= object.width, h= object.height})
         end
     end
+    tempoInicio = love.timer.getTime()
+    tempoFinal = 0
+    jogoFinalizado = false
+end
+
+-- Adicione esta nova função
+function fimDeJogo()
+    local tempoTotal = tempoFinal
+    local minutos = math.floor(tempoTotal / 60)
+    local segundos = math.floor(tempoTotal % 60)
+    
+    love.graphics.setColor(0, 0, 0, 0.7)
+    love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
+    
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.setFont(menuFont)
+    love.graphics.printf("Parabéns, você chegou ao final do jogo!!!", 0, love.graphics.getHeight() / 2 - 100, love.graphics.getWidth(), "center")
+    love.graphics.printf("Extras adquiridos: " .. player.extra_objetivo, 0, love.graphics.getHeight() / 2, love.graphics.getWidth(), "center")
+    love.graphics.printf(string.format("Tempo: %02d:%02d", minutos, segundos), 0, love.graphics.getHeight() / 2 + 50, love.graphics.getWidth(), "center")
+    love.graphics.printf("Pressione 'R' para reiniciar ou 'ESC' para voltar ao menu", 0, love.graphics.getHeight() / 2 + 100, love.graphics.getWidth(), "center")
 end
 
