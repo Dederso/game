@@ -5,7 +5,7 @@ function love.load()
     cameralib = require "libraries/camera"
     camera = cameralib()
     world = wf.newWorld(0, 0, true)
-    world:setGravity(0, 1200)
+    world:setGravity(0, 1000)
 
 -- Configura a janela do jogo ================================================================================================
     love.window.setMode(800, 600, {
@@ -46,12 +46,7 @@ function love.load()
         isOnGround = false,
         direction = 1,  -- 1 para direita, -1 para esquerda
         coyoteTime = 0.1, -- tempo de tolerância em segundos
-        coyoteTimer = 0, -- timer do coyote time
-        isChargingJump = false,
-        jumpChargeTime = 0,
-        maxJumpChargeTime = 1, -- tempo máximo de carga em segundos
-        minJumpForce = 400,    -- força mínima do pulo
-        maxJumpForce = 800,    -- força máxima do pulo
+        coyoteTimer = 0 -- timer do coyote time
     }
 
 -- Cria a hitbox do jogador =================================================================================================
@@ -84,43 +79,19 @@ function love.update(dt)
     local px, py = player.hitbox:getPosition()
 
     -- Movimento horizontal
-    if not player.isChargingJump and (love.keyboard.isDown("left") or love.keyboard.isDown("a")) then
+    if love.keyboard.isDown("left") or love.keyboard.isDown("a") then
         vx = -player.speed
         player.direction = -1
-    elseif not player.isChargingJump and (love.keyboard.isDown("right") or love.keyboard.isDown("d")) then
+    elseif love.keyboard.isDown("right") or love.keyboard.isDown("d") then
         vx = player.speed
         player.direction = 1
-    elseif player.isOnGround then
+    else
         vx = 0
     end
     
     -- Pulo
   
     
-    
-    -- Substitua a lógica de pulo existente por esta:
-    if player.isChargingJump then
-        player.jumpChargeTime = math.min(player.jumpChargeTime + dt, player.maxJumpChargeTime)
-    end
-
-    -- Verifique se o jogador está no chão ou dentro do tempo de coyote
-    local canJump = player.isOnGround or player.coyoteTimer <= player.coyoteTime
-
-    if canJump and love.keyboard.isDown("up") or love.keyboard.isDown("w") then
-        player.isChargingJump = true
-    elseif player.isChargingJump and not (love.keyboard.isDown("up") or love.keyboard.isDown("w")) then
-        -- Calcula a força do pulo com base no tempo de carga
-        local jumpForce = player.minJumpForce + (player.maxJumpForce - player.minJumpForce) * (player.jumpChargeTime / player.maxJumpChargeTime)
-        vy = -jumpForce
-        player.isChargingJump = false
-        player.jumpChargeTime = 0
-        player.coyoteTimer = player.coyoteTime + 1 -- Reseta o coyote time
-        if(player.direction == 1) then
-            vx = player.speed
-        elseif(player.direction == -1) then
-            vx = -player.speed
-        end
-    end
     
     -- Aplica a velocidade horizontal sempre, mas mantém a velocidade vertical
     player.hitbox:setLinearVelocity(vx, vy)
@@ -146,17 +117,17 @@ function love.update(dt)
     
 
     -- Pulo com coyote time
-    -- if love.keyboard.isDown("up") or love.keyboard.isDown("w") then 
-    --    if player.isOnGround then
-    --         vy = -player.jumpForce
-    --         player.coyoteTimer = 0
-    --    else
-    --         if player.coyoteTimer <= player.coyoteTime then
-    --             vy = -player.jumpForce
-    --             player.lastGroundTime = love.timer.getTime()
-    --         end
-    --    end
-    -- end
+    if love.keyboard.isDown("up") or love.keyboard.isDown("w") then 
+       if player.isOnGround then
+            vy = -player.jumpForce
+            player.coyoteTimer = 0
+       else
+            if player.coyoteTimer <= player.coyoteTime then
+                vy = -player.jumpForce
+                player.lastGroundTime = love.timer.getTime()
+            end
+       end
+    end
     if not player.isOnGround then
         if player.direction == 1 then
             player.sprite = sprite_jump_right
@@ -232,8 +203,6 @@ function love.draw()
     love.graphics.print("y: " .. tostring(player.hitbox:getY()), 10, 70)
     --printa o tempo desde que o jogador deixou o chão a contagem do tempo e o tempo armazenado no lastGroundTime
     love.graphics.print("lastGroundTime: " .. tostring(player.coyoteTimer), 10, 110)
-    -- Adicione esta linha para mostrar o tempo de carga do pulo
-    love.graphics.print("Tempo de carga do pulo: " .. string.format("%.2f", player.jumpChargeTime), 10, 130)
     
 end
 
