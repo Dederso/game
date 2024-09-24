@@ -1,14 +1,15 @@
 function love.load()
 
 -- Configurações iniciais do jogo ==========================================================================================
-love.window.setTitle("Lunatic Astronaut")
-love.graphics.setBackgroundColor(0.5, 0.5, 0.5)
-love.graphics.setDefaultFilter("nearest", "nearest")
+    love.window.setTitle("Lunatic Astronaut")
+    love.graphics.setBackgroundColor(0.5, 0.5, 0.5)
+    love.graphics.setDefaultFilter("nearest", "nearest")
 
 -- Importa as bibliotecas ====================================================================================================
     wf = require "libraries/windfield"
     sti = require "libraries/sti"
     cameralib = require "libraries/camera"
+
     camera = cameralib()
     world = wf.newWorld(0, 0, true)
     world:setGravity(0, 1000)
@@ -24,12 +25,14 @@ love.graphics.setDefaultFilter("nearest", "nearest")
     alta = resolutions[1]
 
 -- Configura a janela do jogo ================================================================================================
-    resolution = alta
+    local screenWidth, screenHeight = love.window.getDesktopDimensions()
+    resolution = {width = screenWidth, height = screenHeight}
     love.window.setMode(resolution.width, resolution.height, {
-        resizable=true,
-        vsync=true,
-        minwidth=400,
-        minheight=300
+        resizable = true,
+        vsync = true,
+        minwidth = 400,
+        minheight = 300,
+        fullscreen = true -- Adiciona a opção de tela cheia
     })
 
 -- Carrega o mapa ===========================================================================================================
@@ -46,27 +49,39 @@ love.graphics.setDefaultFilter("nearest", "nearest")
     world:addCollisionClass('Ground')
 
 -- Carrega os sprites do jogador ============================================================================================
-    sprite_right_idle = love.graphics.newImage("assets/Sprite_astronauta_idle_right.png")
-    sprite_left_idle = love.graphics.newImage("assets/Sprite_astronauta_idle_left.png")
-    sprite_right_runing_1 = love.graphics.newImage("assets/Sprite_astronauta_running_right_1.png")
-    sprite_right_runing_2 = love.graphics.newImage("assets/Sprite_astronauta_running_right_2.png")
-    sprite_left_runing_1 = love.graphics.newImage("assets/Sprite_astronauta_running_left_1.png")
-    sprite_left_runing_2 = love.graphics.newImage("assets/Sprite_astronauta_running_left_2.png")
-    sprite_jump_right = love.graphics.newImage("assets/Sprite_astronauta_jumping_right.png")
-    sprite_jump_left = love.graphics.newImage("assets/Sprite_astronauta_jumping_left.png")
+    sprites = {
+        idle_right = love.graphics.newImage("assets/Sprite_astronauta_idle_right.png"),
+        idle_left = love.graphics.newImage("assets/Sprite_astronauta_idle_left.png"),
+        run_right = {
+            love.graphics.newImage("assets/Sprite_astronauta_running_right_1.png"),
+            love.graphics.newImage("assets/Sprite_astronauta_running_right_2.png")
+        },
+        run_left = {
+            love.graphics.newImage("assets/Sprite_astronauta_running_left_1.png"),
+            love.graphics.newImage("assets/Sprite_astronauta_running_left_2.png")
+        },
+        jump_right = love.graphics.newImage("assets/Sprite_astronauta_jumping_right.png"),
+        jump_left = love.graphics.newImage("assets/Sprite_astronauta_jumping_left.png")
+    }
 
--- Cria o jogador ===========================================================================================================
+    -- Configuração das animações
+    animations = {
+        run_right = {frames = sprites.run_right, current = 1, timer = 0},
+        run_left = {frames = sprites.run_left, current = 1, timer = 0}
+    }
+
     player = {
         width = 32,
         height = 63, --um pixel menos para que ele nao fique colidindo com 2 tiles para cima
         width_sprite = 64,
         height_sprite = 64,
-        sprite = sprite_right,
         speed = 300,
-        jumpForce = 700,
+        jumpForce = 900,
+        jumpCharge = 0,
         isOnGround = false,
         direction = 1,  -- 1 para direita, -1 para esquerda
-        
+        currentSprite = sprites.idle_right,
+        animationState = "idle"
     }
 
 -- Cria a hitbox do jogador =================================================================================================
@@ -121,44 +136,39 @@ function love.update(dt)
     -- Atualiza o mundo físico =================================================================================================
     world:update(dt)
     if player.direction == 1 then
-        player.sprite = sprite_right
+        player.sprite = sprites.idle_right
     elseif player.direction == -1 then
-        player.sprite = sprite_left
+        player.sprite = sprites.idle_left
     end
     -- Movimento do jogador ===============================================================================================
     local vx, vy = player.hitbox:getLinearVelocity()
     local px, py = player.hitbox:getPosition()
 
-    -- animação do jogador correndo =================================================================================================
+    -- Atualiza a animação
     if player.isOnGround then
-        if player.direction == 1 then
-            if vx > 0 then
-                if dt % 2 == 0 then
-                    player.sprite = sprite_right_runing_1
-                else
-                    player.sprite = sprite_right_runing_2
-                end
-            else
-                player.sprite = sprite_right_idle
+        if math.abs(vx) < 1 then
+            player.animationState = "idle"
+            player.currentSprite = player.direction == 1 and sprites.idle_right or sprites.idle_left
+        else
+            player.animationState = "run"
+            local anim = player.direction == 1 and animations.run_right or animations.run_left
+            anim.timer = anim.timer + dt
+            if anim.timer > 0.2 then  -- Mude o tempo aqui para ajustar a velocidade da animação
+                anim.current = anim.current % #anim.frames + 1
+                anim.timer = 0
             end
-        elseif player.direction == -1 then
-            if vx < 0 then
-                if dt % 2 == 0 then
-                    player.sprite = sprite_left_runing_1
-                else
-                    player.sprite = sprite_left_runing_2
-                end
-            else
-                player.sprite = sprite_left_idle
-            end
+            player.currentSprite = anim.frames[anim.current]
         end
+    else
+        player.animationState = "jump"
+        player.currentSprite = player.direction == 1 and sprites.jump_right or sprites.jump_left
     end
 
     -- Movimento horizontal do jogador (esquerda e direita) =================================================================
-    if (love.keyboard.isDown("left") or love.keyboard.isDown("a")) and player.isOnGround then
+    if (love.keyboard.isDown("left") or love.keyboard.isDown("a")) and player.isOnGround and player.jumpCharge == 0 then
         vx = -player.speed
         player.direction = -1
-    elseif (love.keyboard.isDown("right") or love.keyboard.isDown("d")) and player.isOnGround then
+    elseif (love.keyboard.isDown("right") or love.keyboard.isDown("d")) and player.isOnGround and player.jumpCharge == 0 then
         vx = player.speed
         player.direction = 1
     end
@@ -173,7 +183,7 @@ function love.update(dt)
     else
         if player.isOnGround and player.jumpCharge and player.jumpCharge > 0 then
             if player.jumpCharge > 0.25 then
-                vy = -player.jumpForce * player.jumpCharge
+                vy = -player.jumpForce * (player.jumpCharge + 0.25-(player.jumpCharge*0.25))
                 vx = player.speed * player.direction * player.jumpCharge
             end
         end
@@ -182,10 +192,10 @@ function love.update(dt)
 
     if not player.isOnGround then
         if player.direction == 1 then
-            player.sprite = sprite_jump_right
+            player.sprite = sprites.jump_right
             
         elseif player.direction == -1 then
-            player.sprite = sprite_jump_left
+            player.sprite = sprites.jump_left
             
         end
     end
@@ -241,7 +251,7 @@ function love.update(dt)
         camera.y = (ht - h/2)
     end
 
-    local freio = 10 -- velocidade de freio no chao (quanto menor, mais ele desliza)
+    local freio = 4 -- velocidade de freio no chao (quanto menor, mais ele desliza)
     if player.isOnGround and vx > freio then
         vx = vx - freio
     elseif player.isOnGround and vx < -freio then
@@ -276,20 +286,20 @@ function love.draw()
             love.graphics.print("Mapa não carregado!", 400, 300)
         end
 
-    -- Desenha o sprite do jogador centralizado na hitbox ===================================================================
-    local spriteWidth = player.sprite:getWidth()
-    local spriteHeight = player.sprite:getHeight()
+    local spriteWidth = player.currentSprite:getWidth()
+    local spriteHeight = player.currentSprite:getHeight()
     local scaleX = player.width_sprite / spriteWidth
     local scaleY = player.height_sprite / spriteHeight
+    -- Desenha o sprite atual do jogador
     love.graphics.draw(
-        player.sprite,
+        player.currentSprite,
         player.hitbox:getX(),
         player.hitbox:getY(),
         0,
         scaleX,
         scaleY,
-        spriteWidth / 2,
-        spriteHeight / 2
+        spriteWidth/2,
+        spriteHeight/2
     )
     camera:detach()
 
@@ -305,9 +315,13 @@ function love.draw()
     love.graphics.rectangle("fill", 10, love.graphics.getHeight() - 30, jumpChargeBarWidth, jumpChargeBarHeight)
     
     -- Barra de carga
-    love.graphics.setColor(0, 1, 0)
+    
     if(player.jumpCharge == 1) then
-        love.graphics.setColor(1, 0, 0)
+        love.graphics.setColor(0, 1, 0)  -- Verde
+    elseif(player.jumpCharge > 0.25) then
+        love.graphics.setColor(1, 1, 0)  -- Amarelo 
+    else
+        love.graphics.setColor(1, 0, 0) -- Vermelho
     end
     -- Resetar a cor
     love.graphics.rectangle("fill", 10, love.graphics.getHeight() - 30, jumpChargeBarWidth * (player.jumpCharge or 0), jumpChargeBarHeight)
@@ -360,7 +374,7 @@ function reiniciarJogo()
     player.hitbox:setFixedRotation(true)
     player.hitbox:setFriction(0)
     player.direction = 1
-    player.sprite = sprite_right
+    player.sprite = sprites.idle_right
     player.jumpCharge = 0
 
     -- Recria as colisões do mapa
