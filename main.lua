@@ -24,7 +24,7 @@ love.graphics.setDefaultFilter("nearest", "nearest")
     alta = resolutions[1]
 
 -- Configura a janela do jogo ================================================================================================
-    resolution = alta
+    resolution = baixa
     love.window.setMode(resolution.width, resolution.height, {
         resizable=true,
         vsync=true,
@@ -61,10 +61,8 @@ love.graphics.setDefaultFilter("nearest", "nearest")
         speed = 200,
         jumpForce = 700,
         isOnGround = false,
-        jumping = false,
         direction = 1,  -- 1 para direita, -1 para esquerda
-        coyoteTime = 0.1, -- tempo de tolerância em segundos
-        coyoteTimer = 0 -- timer do coyote time
+        
     }
 
 -- Cria a hitbox do jogador =================================================================================================
@@ -84,6 +82,34 @@ love.graphics.setDefaultFilter("nearest", "nearest")
         end
     end
     
+    -- Adicione isso ao final da função love.load()
+    jumpChargeBarWidth = 100
+    jumpChargeBarHeight = 10
+end
+
+-- Função para verificar colisões laterais
+function checkLateralCollisions(player)
+    local px, py = player.hitbox:getPosition()
+    local leftColliders = world:queryRectangleArea(
+        px - player.width/2 - 2, -- 2 pixels à esquerda do jogador
+        py - player.height/2 + 2, -- 2 pixels abaixo do topo do jogador
+        2, -- largura da área de verificação
+        player.height - 4, -- altura da área de verificação (4 pixels menor que o jogador)
+        {'Ground'}
+    )
+
+    local rightColliders = world:queryRectangleArea(
+        px + player.width/2, -- borda direita do jogador
+        py - player.height/2 + 2, -- 2 pixels abaixo do topo do jogador
+        2, -- largura da área de verificação
+        player.height - 4, -- altura da área de verificação (4 pixels menor que o jogador)
+        {'Ground'}
+    )
+
+    local isCollidingLeft = #leftColliders > 0
+    local isCollidingRight = #rightColliders > 0
+
+    return isCollidingLeft, isCollidingRight
 end
 
 -- Atualiza o jogo ==========================================================================================================
@@ -107,19 +133,7 @@ function love.update(dt)
         vx = player.speed
         player.direction = 1
     end
-    
-    -- Movimento vertical do jogador (pulo) ===============================================================================
-    if player.jumping then
-        if player.direction == 1 then
-            player.sprite = sprite_jump_right
-            vx = player.speed
-        elseif player.direction == -1 then
-            player.sprite = sprite_jump_left
-            vx = -player.speed
-        end
-    end
-
-    -- Pulo do jogador com 3 fases de carregamento ========================================================================
+    -- Pulo do jogador com base na barra de carga
     if love.keyboard.isDown("space") or love.keyboard.isDown("w") or love.keyboard.isDown("up") then
         if player.isOnGround then
             player.jumpCharge = (player.jumpCharge or 0) + dt
@@ -129,23 +143,12 @@ function love.update(dt)
         end
     else
         if player.isOnGround and player.jumpCharge and player.jumpCharge > 0 then
-            if player.jumpCharge < 0.30 then
-                vy = -player.jumpForce * 0.5
-                vx = -player.speed * player.direction
-                player.jumping = true
-            elseif player.jumpCharge < 0.60 then
-                vy = -player.jumpForce * 0.75
-                vx = player.speed * player.direction
-                player.jumping = true
-            else
-                vy = -player.jumpForce
-                vx = player.speed * player.direction
-                player.jumping = true
+            if player.jumpCharge > 0.25 then
+                vy = -player.jumpForce * player.jumpCharge
+                vx = player.speed * player.direction * player.jumpCharge
             end
-            player.jumpCharge = 0
-            player.jumping = true  
         end
-
+        player.jumpCharge = 0
     end
 
     if not player.isOnGround then
@@ -160,12 +163,9 @@ function love.update(dt)
 
     
     
-    -- Aplica a velocidade horizontal sempre, mas mantém a velocidade vertical
-    player.hitbox:setLinearVelocity(vx, vy)
 
     -- Verifica colisão com o chão
     player.isOnGround = false
-    player.jumping = false
     local groundColliders = world:queryRectangleArea(px - player.width/2, py + player.height/2, player.width, 2, {'Ground'})
     if #groundColliders > 0 then
         player.isOnGround = true
@@ -175,14 +175,19 @@ function love.update(dt)
         local time = love.timer.getTime()
         local lastTime
         if(lastGroundTime ~= nil) then
-            lastTime = lastGroundTime
-        else
-            lastTime = player.coyoteTime+1
+            lastTime = lastGroundTime   
         end
-        player.coyoteTimer = time - lastTime
+       
     end
     
     
+
+    -- Verifica colisões laterais
+    local isCollidingLeft, isCollidingRight = checkLateralCollisions(player)
+
+    -- Adiciona informações de depuração
+    player.isCollidingLeft = isCollidingLeft
+    player.isCollidingRight = isCollidingRight
 
     -- Configura a câmera para seguir o jogador ===================================================================
     camera:lookAt(px, py)
@@ -206,7 +211,25 @@ function love.update(dt)
     if camera.y > (ht - h/2) then
         camera.y = (ht - h/2)
     end
-    
+
+    local freio = 2 -- velocidade de freio no chao (quanto menor, mais ele desliza)
+    if player.isOnGround and vx > freio then
+        vx = vx - freio
+    elseif player.isOnGround and vx < -freio then
+        vx = vx + freio
+    elseif player.isOnGround then
+        vx = 0
+    end
+    if not player.isOnGround then
+        if player.isCollidingLeft then
+            vx = -vx 
+        elseif player.isCollidingRight then
+            vx = -vx
+        end
+    end
+     -- Aplica a velocidade horizontal sempre, mas mantém a velocidade vertical
+     player.hitbox:setLinearVelocity(vx, vy)
+
 end
 -- Desenha o jogo ===========================================================================================================
 function love.draw()
@@ -242,9 +265,26 @@ function love.draw()
     -- Adiciona texto de depuração ===========================================================================================
     world:draw() -- Desenha as hitboxes
     love.graphics.print("FPS: " .. tostring(love.timer.getFPS()), 10, 10)
-    love.graphics.print("jumping: " .. tostring(player.jumping), 10, 30)
     love.graphics.print("x: " .. tostring(player.hitbox:getX()), 10, 50)
     love.graphics.print("y: " .. tostring(player.hitbox:getY()), 10, 70)
+
+    -- Adicione isso após camera:detach() para desenhar a barra de carga do salto
+    -- Barra de fundo
+    love.graphics.setColor(0.5, 0.5, 0.5)
+    love.graphics.rectangle("fill", 10, love.graphics.getHeight() - 30, jumpChargeBarWidth, jumpChargeBarHeight)
+    
+    -- Barra de carga
+    love.graphics.setColor(0, 1, 0)
+    if(player.jumpCharge == 1) then
+        love.graphics.setColor(1, 0, 0)
+    end
+    -- Resetar a cor
+    love.graphics.rectangle("fill", 10, love.graphics.getHeight() - 30, jumpChargeBarWidth * (player.jumpCharge or 0), jumpChargeBarHeight)
+    love.graphics.setColor(1, 1, 1)
+
+    -- Adiciona texto de depuração para colisões laterais
+    love.graphics.print("Colidindo à esquerda: " .. tostring(player.isCollidingLeft), 10, 90)
+    love.graphics.print("Colidindo à direita: " .. tostring(player.isCollidingRight), 10, 110)
 
 end
 
@@ -257,6 +297,48 @@ end
 function love.keypressed(key)
     if key == "escape" then
         love.event.quit()
+    elseif key == "r" then
+        reiniciarJogo()
+    end
+end
+
+-- Adicione esta nova função no final do arquivo
+function reiniciarJogo()
+    -- Recarrega o mapa
+    map = sti("mapa/mapa.lua")
+    if not map then
+        print("Erro ao recarregar o mapa!")
+        love.event.quit()
+        return
+    end
+
+    -- Recria o mundo físico
+    world:destroy()
+    world = wf.newWorld(0, 0, true)
+    world:setGravity(0, 1000)
+
+    -- Redefine as classes de colisão
+    world:addCollisionClass('Player')
+    world:addCollisionClass('Ground')
+
+    -- Recria o jogador
+    local x = map.width * map.tilewidth / 2
+    local y = map.height * map.tileheight * 0.96
+    player.hitbox = world:newRectangleCollider(x, y, player.width, player.height)
+    player.hitbox:setCollisionClass('Player')
+    player.hitbox:setFixedRotation(true)
+    player.hitbox:setFriction(0)
+    player.direction = 1
+    player.sprite = sprite_right
+    player.jumpCharge = 0
+
+    -- Recria as colisões do mapa
+    if map.layers["colision"] then
+        for _, object in ipairs(map.layers["colision"].objects) do
+            local collider = world:newRectangleCollider(object.x, object.y, object.width, object.height)
+            collider:setType("static")
+            collider:setCollisionClass('Ground')
+        end
     end
 end
 
