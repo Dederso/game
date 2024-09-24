@@ -12,13 +12,13 @@ Siga os passos abaixo para rodar o programa:
 2. **Instale o LOVE2D:**
     - Baixe e instale o LOVE2D apartir do [site oficial](https://love2d.org).
 
-2. **Clone o Repositório:**
+3. **Clone o Repositório:**
     ```sh
     git clone <URL_DO_REPOSITORIO>
     cd <NOME_DO_REPOSITORIO>
     ```
 
-3. **Execute o Jogo:**
+4. **Execute o Jogo:**
     ```sh
     lua main.lua
     ```
