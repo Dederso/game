@@ -24,7 +24,7 @@ love.graphics.setDefaultFilter("nearest", "nearest")
     alta = resolutions[1]
 
 -- Configura a janela do jogo ================================================================================================
-    resolution = alta
+    resolution = baixa
     love.window.setMode(resolution.width, resolution.height, {
         resizable=true,
         vsync=true,
