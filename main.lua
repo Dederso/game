@@ -17,7 +17,7 @@ function love.load()
     }
 
 -- Configura a janela do jogo ================================================================================================
-    resolution = resolutions[1]
+    resolution = resolutions[5]
     love.window.setMode(resolution.width, resolution.height, {
         resizable=true,
         vsync=true,
@@ -47,7 +47,7 @@ function love.load()
 -- Cria o jogador ===========================================================================================================
     player = {
         width = 32,
-        height = 64,
+        height = 63, --um pixel menos para que ele nao fique colidindo com 2 tiles para cima
         width_sprite = 64,
         height_sprite = 64,
         sprite = sprite_right,
@@ -55,7 +55,7 @@ function love.load()
         jumpForce = 700,
         isOnGround = false,
         jumping = false,
-        direction = 1  -- 1 para direita, -1 para esquerda
+        direction = 1,  -- 1 para direita, -1 para esquerda
         coyoteTime = 0.1, -- tempo de tolerância em segundos
         coyoteTimer = 0 -- timer do coyote time
     }
@@ -99,8 +99,6 @@ function love.update(dt)
     elseif (love.keyboard.isDown("right") or love.keyboard.isDown("d")) and player.isOnGround then
         vx = player.speed
         player.direction = 1
-    else
-        vx = 0
     end
     
     -- Movimento vertical do jogador (pulo) ===============================================================================
@@ -115,7 +113,7 @@ function love.update(dt)
     end
 
     -- Pulo do jogador com 3 fases de carregamento ========================================================================
-    if love.keyboard.isDown("space") or love.keyboard.isDown("w") then
+    if love.keyboard.isDown("space") or love.keyboard.isDown("w") or love.keyboard.isDown("up") then
         if player.isOnGround then
             player.jumpCharge = (player.jumpCharge or 0) + dt
             if player.jumpCharge > 1 then
@@ -130,11 +128,11 @@ function love.update(dt)
                 player.jumping = true
             elseif player.jumpCharge < 0.60 then
                 vy = -player.jumpForce * 0.75
-                vx = -player.speed * player.direction
+                vx = player.speed * player.direction
                 player.jumping = true
             else
                 vy = -player.jumpForce
-                vx = -player.speed * player.direction
+                vx = player.speed * player.direction
                 player.jumping = true
             end
             player.jumpCharge = 0
@@ -201,6 +199,11 @@ function love.update(dt)
     if camera.y > (ht - h/2) then
         camera.y = (ht - h/2)
     end
+    if player.isOnGround and vx > 0 then
+        vx = vx - 3
+    elseif player.isOnGround and vx < 0 then
+        vx = vx + 3
+    end
      -- Aplica a velocidade horizontal sempre, mas mantém a velocidade vertical
      player.hitbox:setLinearVelocity(vx, vy)
 
@@ -245,9 +248,7 @@ function love.draw()
     love.graphics.print("jumping: " .. tostring(player.jumping), 10, 30)
     love.graphics.print("x: " .. tostring(player.hitbox:getX()), 10, 50)
     love.graphics.print("y: " .. tostring(player.hitbox:getY()), 10, 70)
-    --printa o tempo desde que o jogador deixou o chão a contagem do tempo e o tempo armazenado no lastGroundTime
-    love.graphics.print("lastGroundTime: " .. tostring(player.coyoteTimer), 10, 110)
-    
+
 end
 
 function love.keypressed(key)
