@@ -1,7 +1,7 @@
 function love.load()
 
 -- Configurações iniciais do jogo ==========================================================================================
-love.window.setTitle("Jogo de Plataforma")
+love.window.setTitle("Lunatic Astronaut")
 love.graphics.setBackgroundColor(0.5, 0.5, 0.5)
 love.graphics.setDefaultFilter("nearest", "nearest")
 
@@ -58,7 +58,7 @@ love.graphics.setDefaultFilter("nearest", "nearest")
         width_sprite = 64,
         height_sprite = 64,
         sprite = sprite_right,
-        speed = 200,
+        speed = 300,
         jumpForce = 700,
         isOnGround = false,
         direction = 1,  -- 1 para direita, -1 para esquerda
@@ -164,7 +164,7 @@ function love.update(dt)
     
     
 
-    -- Verifica colisão com o chão
+    -- Verifica colisão com o chão ==========================================================================================
     player.isOnGround = false
     local groundColliders = world:queryRectangleArea(px - player.width/2, py + player.height/2, player.width, 2, {'Ground'})
     if #groundColliders > 0 then
@@ -212,7 +212,7 @@ function love.update(dt)
         camera.y = (ht - h/2)
     end
 
-    local freio = 2 -- velocidade de freio no chao (quanto menor, mais ele desliza)
+    local freio = 10 -- velocidade de freio no chao (quanto menor, mais ele desliza)
     if player.isOnGround and vx > freio then
         vx = vx - freio
     elseif player.isOnGround and vx < -freio then
@@ -220,6 +220,7 @@ function love.update(dt)
     elseif player.isOnGround then
         vx = 0
     end
+    -- Inverte a velocidade horizontal se houver colisão lateral ==========================================================
     if not player.isOnGround then
         if player.isCollidingLeft then
             vx = -vx 
@@ -227,7 +228,8 @@ function love.update(dt)
             vx = -vx
         end
     end
-     -- Aplica a velocidade horizontal sempre, mas mantém a velocidade vertical
+
+     -- Aplica a velocidade horizontal sempre, mas mantém a velocidade vertical atual se houver colisão lateral ========
      player.hitbox:setLinearVelocity(vx, vy)
 
 end
