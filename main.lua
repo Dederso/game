@@ -1,4 +1,14 @@
+-- Adicione estas variáveis globais no início do arquivo
+local gameState = "menu"
+local menuOptions = {"Jogar", "Sair"}
+local selectedOption = 1
+
+-- Modifique a função love.load() existente
 function love.load()
+    -- Seu código existente aqui
+    
+    -- Adicione esta linha para carregar a fonte do menu
+    menuFont = love.graphics.newFont(32)
 
 -- Configurações iniciais do jogo ==========================================================================================
     love.window.setTitle("Lunatic Astronaut")
@@ -155,215 +165,239 @@ end
 
 -- Atualiza o jogo ==========================================================================================================
 function love.update(dt)
-    -- Atualiza o mundo físico =================================================================================================
-    world:update(dt)
-    if player.direction == 1 then
-        player.sprite = sprites.idle_right
-    elseif player.direction == -1 then
-        player.sprite = sprites.idle_left
-    end
-    -- Movimento do jogador ===============================================================================================
-    local vx, vy = player.hitbox:getLinearVelocity()
-    local px, py = player.hitbox:getPosition()
-    if(py <=640) then
-        world:setGravity(0, 400)
-    else
-        world:setGravity(0, 1000)
-    end
-    if(player.hitbox:enter("objetivo extra 1")) then
-        for i, objetivo in ipairs(objetivosExtras) do
-            if not objetivo.collected and player.hitbox:enter('objetivo extra 1') then
-                if player.hitbox:getEnterCollisionData('objetivo extra 1').collider == objetivo.collider then
-                    objetivo.collected = true
-                    objetivo.collider:destroy()
-                    player.extra_objetivo[1] = true
-                    break
+    if gameState == "playing" then
+        -- Seu código de atualização do jogo existente aqui
+        -- Atualiza o mundo físico =================================================================================================
+        world:update(dt)
+        if player.direction == 1 then
+            player.sprite = sprites.idle_right
+        elseif player.direction == -1 then
+            player.sprite = sprites.idle_left
+        end
+        -- Movimento do jogador ===============================================================================================
+        local vx, vy = player.hitbox:getLinearVelocity()
+        local px, py = player.hitbox:getPosition()
+        if(py <=640) then
+            world:setGravity(0, 400)
+        else
+            world:setGravity(0, 1000)
+        end
+        if(player.hitbox:enter("objetivo extra 1")) then
+            for i, objetivo in ipairs(objetivosExtras) do
+                if not objetivo.collected and player.hitbox:enter('objetivo extra 1') then
+                    if player.hitbox:getEnterCollisionData('objetivo extra 1').collider == objetivo.collider then
+                        objetivo.collected = true
+                        objetivo.collider:destroy()
+                        player.extra_objetivo[1] = true
+                        break
+                    end
                 end
             end
         end
-    end
-    -- Atualiza a animação
-    if player.isOnGround then
-        if math.abs(vx) < 1 then
-            player.animationState = "idle"
-            player.currentSprite = player.direction == 1 and sprites.idle_right or sprites.idle_left
-        else
-            player.animationState = "run"
-            local anim = player.direction == 1 and animations.run_right or animations.run_left
-            anim.timer = anim.timer + dt
-            if anim.timer > 0.2 then  -- Mude o tempo aqui para ajustar a velocidade da animação
-                anim.current = anim.current % #anim.frames + 1
-                anim.timer = 0
-            end
-            player.currentSprite = anim.frames[anim.current]
-        end
-    else
-        player.animationState = "jump"
-        player.currentSprite = player.direction == 1 and sprites.jump_right or sprites.jump_left
-    end
-
-    -- Movimento horizontal do jogador (esquerda e direita) =================================================================
-    if (love.keyboard.isDown("left") or love.keyboard.isDown("a")) and player.isOnGround and player.jumpCharge == 0 then
-        vx = -player.speed
-        player.direction = -1
-    elseif (love.keyboard.isDown("right") or love.keyboard.isDown("d")) and player.isOnGround and player.jumpCharge == 0 then
-        vx = player.speed
-        player.direction = 1
-    end
-    -- Pulo do jogador com base na barra de carga
-    if love.keyboard.isDown("space") or love.keyboard.isDown("w") or love.keyboard.isDown("up") then
+        -- Atualiza a animação
         if player.isOnGround then
-            player.jumpCharge = (player.jumpCharge or 0) + dt
-            if player.jumpCharge > 1 then
-                player.jumpCharge = 1
+            if math.abs(vx) < 1 then
+                player.animationState = "idle"
+                player.currentSprite = player.direction == 1 and sprites.idle_right or sprites.idle_left
+            else
+                player.animationState = "run"
+                local anim = player.direction == 1 and animations.run_right or animations.run_left
+                anim.timer = anim.timer + dt
+                if anim.timer > 0.2 then  -- Mude o tempo aqui para ajustar a velocidade da animação
+                    anim.current = anim.current % #anim.frames + 1
+                    anim.timer = 0
+                end
+                player.currentSprite = anim.frames[anim.current]
+            end
+        else
+            player.animationState = "jump"
+            player.currentSprite = player.direction == 1 and sprites.jump_right or sprites.jump_left
+        end
+
+        -- Movimento horizontal do jogador (esquerda e direita) =================================================================
+        if (love.keyboard.isDown("left") or love.keyboard.isDown("a")) and player.isOnGround and player.jumpCharge == 0 then
+            vx = -player.speed
+            player.direction = -1
+        elseif (love.keyboard.isDown("right") or love.keyboard.isDown("d")) and player.isOnGround and player.jumpCharge == 0 then
+            vx = player.speed
+            player.direction = 1
+        end
+        -- Pulo do jogador com base na barra de carga
+        if love.keyboard.isDown("space") or love.keyboard.isDown("w") or love.keyboard.isDown("up") then
+            if player.isOnGround then
+                player.jumpCharge = (player.jumpCharge or 0) + dt
+                if player.jumpCharge > 1 then
+                    player.jumpCharge = 1
+                end
+            end
+        else
+            if player.isOnGround and player.jumpCharge and player.jumpCharge > 0 then
+                if player.jumpCharge > 0.25 then
+                    vy = -player.jumpForce * (player.jumpCharge + 0.25-(player.jumpCharge*0.25))
+                    vx = player.speed * player.direction * (player.jumpCharge + 0.25-(player.jumpCharge*0.25))
+                end
+            end
+            player.jumpCharge = 0
+        end
+
+        if not player.isOnGround then
+            if player.direction == 1 then
+                player.sprite = sprites.jump_right
+                
+            elseif player.direction == -1 then
+                player.sprite = sprites.jump_left
+                
             end
         end
-    else
-        if player.isOnGround and player.jumpCharge and player.jumpCharge > 0 then
-            if player.jumpCharge > 0.25 then
-                vy = -player.jumpForce * (player.jumpCharge + 0.25-(player.jumpCharge*0.25))
-                vx = player.speed * player.direction * (player.jumpCharge + 0.25-(player.jumpCharge*0.25))
-            end
-        end
-        player.jumpCharge = 0
-    end
 
-    if not player.isOnGround then
-        if player.direction == 1 then
-            player.sprite = sprites.jump_right
-            
-        elseif player.direction == -1 then
-            player.sprite = sprites.jump_left
-            
-        end
-    end
+        
+        
 
-    
-    
-
-    -- Verifica colisão com o chão ==========================================================================================
-    player.isOnGround = false
-    local groundColliders = world:queryRectangleArea(px - player.width/2, py + player.height/2, player.width, 2, {'Ground'})
-    if #groundColliders > 0 then
-        player.isOnGround = true
-        lastGroundTime = love.timer.getTime()
-    else
+        -- Verifica colisão com o chão ==========================================================================================
         player.isOnGround = false
-        local time = love.timer.getTime()
-        local lastTime
-        if(lastGroundTime ~= nil) then
-            lastTime = lastGroundTime   
+        local groundColliders = world:queryRectangleArea(px - player.width/2, py + player.height/2, player.width, 2, {'Ground'})
+        if #groundColliders > 0 then
+            player.isOnGround = true
+            lastGroundTime = love.timer.getTime()
+        else
+            player.isOnGround = false
+            local time = love.timer.getTime()
+            local lastTime
+            if(lastGroundTime ~= nil) then
+                lastTime = lastGroundTime   
+            end
+           
         end
-       
-    end
-    
-    
+        
+        
 
-    -- Verifica colisões laterais
-    local isCollidingLeft, isCollidingRight = checkLateralCollisions(player)
+        -- Verifica colisões laterais
+        local isCollidingLeft, isCollidingRight = checkLateralCollisions(player)
 
-    -- Adiciona informações de depuração
-    player.isCollidingLeft = isCollidingLeft
-    player.isCollidingRight = isCollidingRight
+        -- Adiciona informações de depuração
+        player.isCollidingLeft = isCollidingLeft
+        player.isCollidingRight = isCollidingRight
 
-    -- Configura a câmera para seguir o jogador ===================================================================
-    camera:lookAt(px, py)
-    local w = love.graphics.getWidth()
-    local h = love.graphics.getHeight()
-    local wt = map.width * map.tilewidth
-    local ht = map.height * map.tileheight
+        -- Configura a câmera para seguir o jogador ===================================================================
+        camera:lookAt(px, py)
+        local w = love.graphics.getWidth()
+        local h = love.graphics.getHeight()
+        local wt = map.width * map.tilewidth
+        local ht = map.height * map.tileheight
 
-    if camera.x < w/2 then
-        camera.x = w/2
-    end
+        if camera.x < w/2 then
+            camera.x = w/2
+        end
 
-    if camera.y < h/2 then
-        camera.y = h/2
-    end
+        if camera.y < h/2 then
+            camera.y = h/2
+        end
 
-    if camera.x > (wt - w/2) then
-        camera.x = (wt - w/2)
-    end
-    
-    if camera.y > (ht - h/2) then
-        camera.y = (ht - h/2)
-    end
+        if camera.x > (wt - w/2) then
+            camera.x = (wt - w/2)
+        end
+        
+        if camera.y > (ht - h/2) then
+            camera.y = (ht - h/2)
+        end
 
-    local freio = 4 -- velocidade de freio no chao (quanto menor, mais ele desliza)
-    if player.isOnGround and vx > freio then
-        vx = vx - freio
-    elseif player.isOnGround and vx < -freio then
-        vx = vx + freio
-    elseif player.isOnGround then
-        vx = 0
-    end
-    -- Inverte a velocidade horizontal se houver colisão lateral ==========================================================
-    if not player.isOnGround then
-        if player.isCollidingLeft then
-            vx = -vx 
-        elseif player.isCollidingRight then
-            vx = -vx
+        local freio = 4 -- velocidade de freio no chao (quanto menor, mais ele desliza)
+        if player.isOnGround and vx > freio then
+            vx = vx - freio
+        elseif player.isOnGround and vx < -freio then
+            vx = vx + freio
+        elseif player.isOnGround then
+            vx = 0
+        end
+        -- Inverte a velocidade horizontal se houver colisão lateral ==========================================================
+        if not player.isOnGround then
+            if player.isCollidingLeft then
+                vx = -vx 
+            elseif player.isCollidingRight then
+                vx = -vx
+            end
+        end
+
+         -- Aplica a velocidade horizontal sempre, mas mantém a velocidade vertical atual se houver colisão lateral ========
+         player.hitbox:setLinearVelocity(vx, vy)
+    elseif gameState == "menu" then
+        -- Lógica simples do menu
+        if love.keyboard.isDown("up") then
+            selectedOption = math.max(1, selectedOption - 1)
+        elseif love.keyboard.isDown("down") then
+            selectedOption = math.min(#menuOptions, selectedOption + 1)
         end
     end
-
-     -- Aplica a velocidade horizontal sempre, mas mantém a velocidade vertical atual se houver colisão lateral ========
-     player.hitbox:setLinearVelocity(vx, vy)
-
 end
+
 -- Desenha o jogo ===========================================================================================================
 function love.draw()
-    camera:attach()
-        -- Desenha o mapa
-        if map then
-            for i, layer in ipairs(map.layers) do
-                if layer.name == "objetivo extra 1" and player.extra_objetivo[1] == false then
-                    layer:draw()
-                elseif layer.name ~= "colision" and layer.name ~= "objetivo extra 1" then -- mudei pra poder ver as colisoes dps só por o nome correto "colision"
-                    layer:draw()
+    if gameState == "playing" then
+        -- Seu código de desenho do jogo existente aqui
+        camera:attach()
+            -- Desenha o mapa
+            if map then
+                for i, layer in ipairs(map.layers) do
+                    if layer.name == "objetivo extra 1" and player.extra_objetivo[1] == false then
+                        layer:draw()
+                    elseif layer.name ~= "colision" and layer.name ~= "objetivo extra 1" then -- mudei pra poder ver as colisoes dps só por o nome correto "colision"
+                        layer:draw()
+                    end
                 end
+            else
+                love.graphics.print("Mapa não carregado!", 400, 300)
             end
+
+        local spriteWidth = player.currentSprite:getWidth()
+        local spriteHeight = player.currentSprite:getHeight()
+        local scaleX = player.width_sprite / spriteWidth
+        local scaleY = player.height_sprite / spriteHeight
+        -- Desenha o sprite atual do jogador
+        love.graphics.draw(
+            player.currentSprite,
+            player.hitbox:getX(),
+            player.hitbox:getY(),
+            0,
+            scaleX,
+            scaleY,
+            spriteWidth/2,
+            spriteHeight/2
+        )
+        camera:detach()
+
+        -- Adiciona texto de depuração ===========================================================================================
+        world:draw() -- Desenha as hitboxes
+        love.graphics.print("FPS: " .. tostring(love.timer.getFPS()), 10, 10)
+
+        
+        -- Barra de fundo
+        love.graphics.setColor(0.5, 0.5, 0.5)
+        love.graphics.rectangle("fill", 10, love.graphics.getHeight() - 30, jumpChargeBarWidth, jumpChargeBarHeight)
+        -- Barra de carga
+        if(player.jumpCharge == 1) then
+            love.graphics.setColor(0, 1, 0)  -- Verde
+        elseif(player.jumpCharge > 0.25) then
+            love.graphics.setColor(1, 1, 0)  -- Amarelo 
         else
-            love.graphics.print("Mapa não carregado!", 400, 300)
+            love.graphics.setColor(1, 0, 0) -- Vermelho
         end
-
-    local spriteWidth = player.currentSprite:getWidth()
-    local spriteHeight = player.currentSprite:getHeight()
-    local scaleX = player.width_sprite / spriteWidth
-    local scaleY = player.height_sprite / spriteHeight
-    -- Desenha o sprite atual do jogador
-    love.graphics.draw(
-        player.currentSprite,
-        player.hitbox:getX(),
-        player.hitbox:getY(),
-        0,
-        scaleX,
-        scaleY,
-        spriteWidth/2,
-        spriteHeight/2
-    )
-    camera:detach()
-
-    -- Adiciona texto de depuração ===========================================================================================
-    world:draw() -- Desenha as hitboxes
-    love.graphics.print("FPS: " .. tostring(love.timer.getFPS()), 10, 10)
-
-    
-    -- Barra de fundo
-    love.graphics.setColor(0.5, 0.5, 0.5)
-    love.graphics.rectangle("fill", 10, love.graphics.getHeight() - 30, jumpChargeBarWidth, jumpChargeBarHeight)
-    -- Barra de carga
-    if(player.jumpCharge == 1) then
-        love.graphics.setColor(0, 1, 0)  -- Verde
-    elseif(player.jumpCharge > 0.25) then
-        love.graphics.setColor(1, 1, 0)  -- Amarelo 
-    else
-        love.graphics.setColor(1, 0, 0) -- Vermelho
+        -- Resetar a cor
+        love.graphics.rectangle("fill", 10, love.graphics.getHeight() - 30, jumpChargeBarWidth * (player.jumpCharge or 0), jumpChargeBarHeight)
+        love.graphics.setColor(0, 0, 0)
+        love.graphics.print("objetivo extra 1: " .. tostring(player.extra_objetivo[1]), 10, love.graphics.getHeight() - 60)
+        love.graphics.setColor(1, 1, 1)
+    elseif gameState == "menu" then
+        -- Desenhe o menu
+        love.graphics.setFont(menuFont)
+        for i, option in ipairs(menuOptions) do
+            if i == selectedOption then
+                love.graphics.setColor(1, 1, 0)
+            else
+                love.graphics.setColor(1, 1, 1)
+            end
+            love.graphics.print(option, 300, 200 + i * 50)
+        end
     end
-    -- Resetar a cor
-    love.graphics.rectangle("fill", 10, love.graphics.getHeight() - 30, jumpChargeBarWidth * (player.jumpCharge or 0), jumpChargeBarHeight)
-    love.graphics.setColor(0, 0, 0)
-    love.graphics.print("objetivo extra 1: " .. tostring(player.extra_objetivo[1]), 10, love.graphics.getHeight() - 60)
-    love.graphics.setColor(1, 1, 1)
 end
 
 -- Função para redimensionar a janela =======================================================================================
@@ -373,14 +407,25 @@ end
 
 -- Função para fechar o jogo ===============================================================================================
 function love.keypressed(key)
-    if key == "escape" then
-        love.event.quit()
-    elseif key == "r" then
-        reiniciarJogo()
-    elseif key == "t" then
-        mudarResolucao()
-    elseif key == "f" then
-        alternarTelaCheia()
+    if gameState == "menu" then
+        if key == "return" then
+            if selectedOption == 1 then
+                gameState = "playing"
+                -- Aqui você pode adicionar código para iniciar o jogo
+            elseif selectedOption == 2 then
+                love.event.quit()
+            end
+        end
+    elseif gameState == "playing" then
+        if key == "escape" then
+            gameState = "menu"
+        elseif key == "r" then
+            reiniciarJogo()
+        elseif key == "t" then
+            mudarResolucao()
+        elseif key == "f" then
+            alternarTelaCheia()
+        end
     end
 end
 
