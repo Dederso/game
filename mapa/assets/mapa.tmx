@@ -856,7 +856,7 @@
 75,73,74,75,75,74,75,75,75,75,73,74,73,74,73,75,75,74,73,74,74,75,75,75,75,75,73,74,74,74,75,74,75,73,74,74,75,73,74,73,75,73,74,73,73,74,73,74,74,74,73,73,75,75,75,73,74,74,75,73
 </data>
  </layer>
- <objectgroup id="5" name="colision">
+ <objectgroup id="5" name="colision" visible="0">
   <object id="22" x="0" y="0" width="0.01" height="3200"/>
   <object id="24" x="0" y="3200" width="1920" height="0.01"/>
   <object id="25" x="1920" y="0" width="0.01" height="3200"/>
@@ -909,13 +909,13 @@
   <object id="123" x="928" y="1120" width="96" height="32"/>
   <object id="124" x="1184" y="1088" width="64" height="32"/>
  </objectgroup>
- <objectgroup id="12" name="objetivo extra 1" locked="1">
+ <objectgroup id="12" name="objetivo extra 1" visible="0" locked="1">
   <object id="78" name="1" x="96" y="1856" width="32" height="32"/>
   <object id="84" name="2" x="416" y="832" width="32" height="32"/>
   <object id="86" name="3" x="960" y="2304" width="32" height="32"/>
   <object id="87" name="4" x="1824" y="2432" width="32" height="32"/>
  </objectgroup>
- <objectgroup id="13" name="objetivo final">
+ <objectgroup id="13" name="objetivo final" visible="0">
   <object id="125" x="1408" y="-128" width="384" height="384">
    <ellipse/>
   </object>
