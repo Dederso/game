@@ -313,7 +313,7 @@ function love.update(dt)
             camera.y = (ht - h/2)
         end
 
-        local freio = 4 -- velocidade de freio no chao (quanto menor, mais ele desliza)
+        local freio = 10 -- velocidade de freio no chao (quanto menor, mais ele desliza)
         if player.isOnGround and vx > freio then
             vx = vx - freio
         elseif player.isOnGround and vx < -freio then
