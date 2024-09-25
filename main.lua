@@ -79,7 +79,9 @@ function love.load()
     }
 
     sounds = {
-        jump = love.audio.newSource("sounds/cartoon_jump.mp3", "static")
+        jump = love.audio.newSource("sounds/cartoon_jump.mp3", "static"),
+        ambient = love.audio.newSource("sounds/ambient_sound.mp3", "stream"),
+        pick_up = love.audio.newSource("sounds/pick_up_item.mp3", "static")
     }
 
     -- Configuração das animações
@@ -177,7 +179,6 @@ end
 -- Atualiza o jogo ==========================================================================================================
 function love.update(dt)
     if gameState == "playing" and not jogoFinalizado then
-        -- Seu código de atualização do jogo existente aqui
         -- Atualiza o mundo físico =================================================================================================
         world:update(dt)
         if player.direction == 1 then
@@ -185,6 +186,13 @@ function love.update(dt)
         elseif player.direction == -1 then
             player.sprite = sprites.idle_left
         end
+
+        -- Ativa o som ambiente do jogo ===============================================================================================
+        if not sounds.ambient:isPlaying() then
+            sounds.ambient:setLooping(true)
+            love.audio.play(sounds.ambient)
+        end
+
         -- Movimento do jogador ===============================================================================================
         local vx, vy = player.hitbox:getLinearVelocity()
         local px, py = player.hitbox:getPosition()
@@ -193,6 +201,7 @@ function love.update(dt)
         else
             world:setGravity(0, 1000)
         end
+        -- Verifica colisão com os objetivos extras e coleta se houver colisão ====================================================
         if(player.hitbox:enter("objetivo extra 1")) then
             for i, objetivo in ipairs(objetivosExtras) do
                 if not objetivo.collected and player.hitbox:enter('objetivo extra 1') then
@@ -200,6 +209,7 @@ function love.update(dt)
                         objetivo.collected = true
                         objetivo.collider:destroy()
                         player.extra_objetivo = player.extra_objetivo + 1
+                        love.audio.play(sounds.pick_up)
                         break
                     end
                 end
@@ -281,8 +291,6 @@ function love.update(dt)
            
         end
         
-        
-
         -- Verifica colisões laterais
         local isCollidingLeft, isCollidingRight = checkLateralCollisions(player)
 
