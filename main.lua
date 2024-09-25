@@ -42,7 +42,7 @@ function love.load()
     resolution = {width = screenWidth, height = screenHeight}
     love.window.setMode(resolution.width, resolution.height, {
         resizable = true,
-        vsync = true,
+        vsync = false,
         minwidth = 400,
         minheight = 300,
         fullscreen = true -- Adiciona a opção de tela cheia
@@ -76,6 +76,10 @@ function love.load()
         },
         jump_right = love.graphics.newImage("assets/Sprite_astronauta_jumping_right.png"),
         jump_left = love.graphics.newImage("assets/Sprite_astronauta_jumping_left.png")
+    }
+
+    sounds = {
+        jump = love.audio.newSource("sounds/cartoon_jump.mp3", "static")
     }
 
     -- Configuração das animações
@@ -242,6 +246,7 @@ function love.update(dt)
                 if player.jumpCharge > 0.25 then
                     vy = -player.jumpForce * (player.jumpCharge + 0.25-(player.jumpCharge*0.25))
                     vx = player.speed * player.direction * (player.jumpCharge + 0.25-(player.jumpCharge*0.25))
+                    love.audio.play(sounds.jump)
                 end
             end
             player.jumpCharge = 0
@@ -387,7 +392,6 @@ function love.draw()
         camera:detach()
 
         -- Adiciona texto de depuração ===========================================================================================
-        world:draw() -- Desenha as hitboxes
         love.graphics.print("FPS: " .. tostring(love.timer.getFPS()), 10, 10)
 
         
