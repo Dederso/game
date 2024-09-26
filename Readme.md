@@ -36,3 +36,7 @@ Sinta-se à vontade para contribuir com melhorias. Faça um fork do projeto, cri
 ## Licença
 
 Este projeto está licenciado sob a [MIT License](LICENSE).
+
+## Créditos Extras
+
+As sprites do astronauta e partes do background foram desenhadas por [Giulia Guimarães](https://giuliaguimaraes.myportfolio.com) 
