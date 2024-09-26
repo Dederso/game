@@ -470,6 +470,7 @@ function love.keypressed(key)
     elseif gameState == "playing" then
         if key == "escape" then
             gameState = "menu"
+            love.audio.stop(sounds.ambient)
         elseif key == "r" then
             reiniciarJogo()
         elseif key == "t" then
