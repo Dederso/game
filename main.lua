@@ -145,7 +145,6 @@ function love.load()
             local collider = world:newCircleCollider(object.x+object.width/2, object.y+object.height/2, object.width/2)
             collider:setCollisionClass('objetivo final')
             collider:setType("static")
-            table.insert(objetivosExtras, {collider = collider,w= object.width, h= object.height})
         end
     end
     -- Adicione isso ao final da função love.load()
@@ -614,7 +613,6 @@ function reiniciarJogo()
             local collider = world:newCircleCollider(object.x+object.width/2, object.y+object.height/2, object.width/2)
             collider:setCollisionClass('objetivo final')
             collider:setType("static")
-            table.insert(objetivosExtras, {collider = collider,w= object.width, h= object.height})
         end
     end
     tempoInicio = love.timer.getTime()
