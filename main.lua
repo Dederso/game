@@ -508,7 +508,7 @@ function mudarResolucao()
     love.window.setMode(newResolution.width, newResolution.height, {
         fullscreen = isFullscreen,
         resizable = true,
-        vsync = true,
+        vsync = false,
         minwidth = 400,
         minheight = 300
     })
@@ -523,7 +523,7 @@ function alternarTelaCheia()
         love.window.setMode(currentResolution.width, currentResolution.height, {
             fullscreen = false,
             resizable = true,
-            vsync = true,
+            vsync = false,
             minwidth = 400,
             minheight = 300
         })
