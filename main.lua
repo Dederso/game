@@ -297,7 +297,12 @@ function love.update(dt)
         end
 
         -- Verifica colisão com o chão ==========================================================================================
-        local groundColliders = world:queryRectangleArea(px - player.width/2, py + player.height/2, player.width, 1, {'Ground'})
+<<<<<<< Updated upstream
+        player.isOnGround = false
+        local groundColliders = world:queryRectangleArea(px - player.width/2, py + player.height/2, player.width, 2, {'Ground'})
+=======
+        local groundColliders = world:queryRectangleArea(px - player.width/2, py + player.height/2 -2 , player.width, 4, {'Ground'})
+>>>>>>> Stashed changes
         if #groundColliders > 0 then
             player.isOnGround = true
         else
@@ -349,13 +354,8 @@ function love.update(dt)
             end
         end
         if player.hitbox:enter("objetivo final") then
-            for _, objetivo in ipairs(objetivosExtras) do
-                if player.hitbox:getEnterCollisionData('objetivo final').collider == objetivo.collider then
-                    tempoFinal = love.timer.getTime() - tempoInicio
-                    jogoFinalizado = true
-                    break
-                end
-            end
+            tempoFinal = love.timer.getTime() - tempoInicio
+            jogoFinalizado = true
         end
          -- Aplica a velocidade horizontal sempre, mas mantém a velocidade vertical atual se houver colisão lateral ========
          player.hitbox:setLinearVelocity(vx, vy)
