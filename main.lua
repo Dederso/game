@@ -297,17 +297,11 @@ function love.update(dt)
         end
 
         -- Verifica colisão com o chão ==========================================================================================
-<<<<<<< Updated upstream
-        player.isOnGround = false
-        local groundColliders = world:queryRectangleArea(px - player.width/2, py + player.height/2, player.width, 2, {'Ground'})
-=======
         local groundColliders = world:queryRectangleArea(px - player.width/2, py + player.height/2 -2 , player.width, 4, {'Ground'})
->>>>>>> Stashed changes
         if #groundColliders > 0 then
             player.isOnGround = true
         else
             player.isOnGround = false
-           
         end
         
         
