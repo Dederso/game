@@ -419,7 +419,7 @@ function love.draw()
         -- Resetar a cor
         love.graphics.rectangle("fill", 10, love.graphics.getHeight() - 30, jumpChargeBarWidth * (player.jumpCharge or 0), jumpChargeBarHeight)
         love.graphics.setColor(0, 0, 0)
-        love.graphics.print("objetivo extra: " .. tostring(player.extra_objetivo), 10, 20)
+        -- love.graphics.print("objetivo extra: " .. tostring(player.extra_objetivo), 10, 20)
         love.graphics.setColor(1, 1, 1)
 
         if jogoFinalizado then
