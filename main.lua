@@ -114,7 +114,7 @@ function love.load()
     -- Cria a hitbox do jogador =================================================================================================
     local x = map.width * map.tilewidth / 2
     local y = map.height * map.tileheight * 0.96
-    player.hitbox = world:newRectangleCollider(x, y, player.width, player.height)
+    player.hitbox = world:newRectangleCollider(x,y, player.width, player.height)
     player.hitbox:setCollisionClass('Player')
     player.hitbox:setFixedRotation(true)
     player.hitbox:setFriction(0)
@@ -128,6 +128,7 @@ function love.load()
         end
     end
     -- Adicione esta linha para armazenar os coletáveis
+    objetivosExtrasTotal = 0
     objetivosExtras = {}
     if map.layers["objetivo extra 1"] then
         for _, object in ipairs(map.layers["objetivo extra 1"].objects) do
@@ -135,11 +136,12 @@ function love.load()
             collider:setCollisionClass('objetivo extra 1')
             collider:setType("static")
             table.insert(objetivosExtras, {collider = collider, collected = false,w= object.width, h= object.height})
+            objetivosExtrasTotal = objetivosExtrasTotal + 1
         end
     end
     if map.layers["objetivo final"] then
         for _, object in ipairs(map.layers["objetivo final"].objects) do
-            local collider = world:newRectangleCollider(object.x, object.y, object.width, object.height)
+            local collider = world:newCircleCollider(object.x+object.width/2, object.y+object.height/2, object.width/2)
             collider:setCollisionClass('objetivo final')
             collider:setType("static")
             table.insert(objetivosExtras, {collider = collider,w= object.width, h= object.height})
@@ -220,6 +222,13 @@ function love.update(dt)
                 end
             end
         end
+         -- Verifica colisões laterais do jogador =================================================================================
+        local isCollidingLeft, isCollidingRight = checkLateralCollisions(player)
+
+        -- Adiciona informações de depuração ======================================================================================
+        player.isCollidingLeft = isCollidingLeft
+        player.isCollidingRight = isCollidingRight
+        
         -- Atualiza a animação do jogador com base no estado atual ============================================================
         if player.isOnGround then
             if math.abs(vx) < 1 then
@@ -260,8 +269,16 @@ function love.update(dt)
         else
             if player.isOnGround and player.jumpCharge and player.jumpCharge > 0 then
                 if player.jumpCharge > 0.25 then
-                    vy = -player.jumpForce * (player.jumpCharge + 0.25-(player.jumpCharge*0.25))
-                    vx = player.speed * player.direction * (player.jumpCharge + 0.25-(player.jumpCharge*0.25))
+                    if(player.isCollidingLeft) then
+                        vy = -player.jumpForce * (player.jumpCharge + 0.25-(player.jumpCharge*0.25))
+                        vx = player.speed * -1 * (player.jumpCharge + 0.25-(player.jumpCharge*0.25))
+                    elseif(player.isCollidingRight) then
+                        vy = -player.jumpForce * (player.jumpCharge + 0.25-(player.jumpCharge*0.25))
+                        vx = player.speed * 1 * (player.jumpCharge + 0.25-(player.jumpCharge*0.25))
+                    else
+                        vy = -player.jumpForce * (player.jumpCharge + 0.25-(player.jumpCharge*0.25))
+                        vx = player.speed * player.direction * (player.jumpCharge + 0.25-(player.jumpCharge*0.25))
+                    end
                     love.audio.play(sounds.jump)
                 end
             end
@@ -280,27 +297,16 @@ function love.update(dt)
         end
 
         -- Verifica colisão com o chão ==========================================================================================
-        player.isOnGround = false
-        local groundColliders = world:queryRectangleArea(px - player.width/2, py + player.height/2, player.width, 2, {'Ground'})
+        local groundColliders = world:queryRectangleArea(px - player.width/2 -1, py + player.height/2, player.width+2, 2, {'Ground'})
         if #groundColliders > 0 then
             player.isOnGround = true
-            lastGroundTime = love.timer.getTime()
         else
             player.isOnGround = false
-            local time = love.timer.getTime()
-            local lastTime
-            if(lastGroundTime ~= nil) then
-                lastTime = lastGroundTime   
-            end
            
         end
         
-        -- Verifica colisões laterais do jogador =================================================================================
-        local isCollidingLeft, isCollidingRight = checkLateralCollisions(player)
-
-        -- Adiciona informações de depuração ======================================================================================
-        player.isCollidingLeft = isCollidingLeft
-        player.isCollidingRight = isCollidingRight
+       
+      
 
         -- Configura a câmera para seguir o jogador ===================================================================
         camera:lookAt(px, py)
@@ -384,7 +390,7 @@ function love.draw()
             else
                 love.graphics.print("Mapa não carregado!", 400, 300)
             end
-
+        --world:draw() --desenha o mundo fisico
         local spriteWidth = player.currentSprite:getWidth()
         local spriteHeight = player.currentSprite:getHeight()
         local scaleX = player.width_sprite / spriteWidth
@@ -420,6 +426,8 @@ function love.draw()
         love.graphics.rectangle("fill", 10, love.graphics.getHeight() - 30, jumpChargeBarWidth * (player.jumpCharge or 0), jumpChargeBarHeight)
         love.graphics.setColor(0, 0, 0)
         -- love.graphics.print("objetivo extra: " .. tostring(player.extra_objetivo), 10, 20)
+        --love.graphics.print("x: " .. tostring(player.hitbox:getX()), 10, 20)
+        --love.graphics.print("y: " .. tostring(player.hitbox:getY()), 10, 40)
         love.graphics.setColor(1, 1, 1)
 
         if jogoFinalizado then
@@ -557,6 +565,7 @@ function reiniciarJogo()
     world:addCollisionClass('Player')
     world:addCollisionClass('Ground')
     world:addCollisionClass('objetivo extra 1',{ignores = {'Player'}})
+    world:addCollisionClass('objetivo final',{ignores = {'Player'}})
     -- Recria o jogador
     local x = map.width * map.tilewidth / 2
     local y = map.height * map.tileheight * 0.96
@@ -576,6 +585,7 @@ function reiniciarJogo()
             collider:setCollisionClass('Ground')
         end
     end
+    objetivosExtrasTotal = 0
     objetivosExtras = {}
     if map.layers["objetivo extra 1"] then
         for _, object in ipairs(map.layers["objetivo extra 1"].objects) do
@@ -583,11 +593,21 @@ function reiniciarJogo()
             collider:setCollisionClass('objetivo extra 1')
             collider:setType("static")
             table.insert(objetivosExtras, {collider = collider, collected = false,w= object.width, h= object.height})
+            objetivosExtrasTotal = objetivosExtrasTotal + 1
+        end
+    end
+    if map.layers["objetivo final"] then
+        for _, object in ipairs(map.layers["objetivo final"].objects) do
+            local collider = world:newCircleCollider(object.x+object.width/2, object.y+object.height/2, object.width/2)
+            collider:setCollisionClass('objetivo final')
+            collider:setType("static")
+            table.insert(objetivosExtras, {collider = collider,w= object.width, h= object.height})
         end
     end
     tempoInicio = love.timer.getTime()
     tempoFinal = 0
     jogoFinalizado = false
+    player.extra_objetivo = 0
 end
 
 -- Adicione esta nova função
@@ -602,7 +622,7 @@ function fimDeJogo()
     love.graphics.setColor(1, 1, 1)
     love.graphics.setFont(menuFont)
     love.graphics.printf("Parabéns, você chegou ao final do jogo!!!", 0, love.graphics.getHeight() / 2 - 100, love.graphics.getWidth(), "center")
-    love.graphics.printf("Extras adquiridos: " .. player.extra_objetivo, 0, love.graphics.getHeight() / 2, love.graphics.getWidth(), "center")
+    love.graphics.printf("Extras adquiridos: " .. player.extra_objetivo .. "/" .. objetivosExtrasTotal, 0, love.graphics.getHeight() / 2, love.graphics.getWidth(), "center")
     love.graphics.printf(string.format("Tempo: %02d:%02d", minutos, segundos), 0, love.graphics.getHeight() / 2 + 50, love.graphics.getWidth(), "center")
     love.graphics.printf("Pressione 'R' para reiniciar ou 'ESC' para voltar ao menu", 0, love.graphics.getHeight() / 2 + 100, love.graphics.getWidth(), "center")
 end
