@@ -392,7 +392,7 @@ function love.draw()
             else
                 love.graphics.print("Mapa não carregado!", 400, 300)
             end
-        world:draw() --desenha o mundo fisico
+        --world:draw() --desenha o mundo fisico
         local spriteWidth = player.currentSprite:getWidth()
         local spriteHeight = player.currentSprite:getHeight()
         local scaleX = player.width_sprite / spriteWidth
@@ -427,8 +427,19 @@ function love.draw()
         -- Resetar a cor
         love.graphics.rectangle("fill", 10, love.graphics.getHeight() - 30, jumpChargeBarWidth * (player.jumpCharge or 0), jumpChargeBarHeight)
         love.graphics.setColor(0, 0, 0)
-        -- love.graphics.print("objetivo extra: " .. tostring(player.extra_objetivo), 10, 20)
-        --love.graphics.print("x: " .. tostring(player.hitbox:getX()), 10, 20)
+        love.graphics.setFont(love.graphics.newFont(16))
+        local font = love.graphics.getFont()
+        local restartText = "Pressione 'R' para reiniciar"
+        local resizeText = "Pressione 'T' para mudar a resolução"
+        local exitText = "Pressione 'ESC' para voltar ao menu"
+        local fullscreenText = "Pressione 'F' para alternar tela cheia"
+        local larguraTela = love.graphics.getWidth()
+        
+        love.graphics.print(restartText, larguraTela - font:getWidth(resizeText) - 10, 40)
+        love.graphics.print(resizeText, larguraTela - font:getWidth(resizeText) - 10, 60)
+        love.graphics.print(fullscreenText, larguraTela - font:getWidth(resizeText) - 10, 80)
+        love.graphics.print(exitText, larguraTela - font:getWidth(resizeText) - 10, 100)
+        -- love.graphics.print("x: " .. tostring(player.hitbox:getX()), 10, 20)
         --love.graphics.print("y: " .. tostring(player.hitbox:getY()), 10, 40)
         love.graphics.setColor(1, 1, 1)
 
