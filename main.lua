@@ -125,6 +125,7 @@ function love.load()
             local collider = world:newRectangleCollider(object.x, object.y, object.width, object.height)
             collider:setType("static")
             collider:setCollisionClass('Ground')
+            collider:setFriction(0)
         end
     end
     -- Adicione esta linha para armazenar os coletáveis
@@ -297,13 +298,14 @@ function love.update(dt)
         end
 
         -- Verifica colisão com o chão ==========================================================================================
-        local groundColliders = world:queryRectangleArea(px - player.width/2 -1, py + player.height/2, player.width+2, 2, {'Ground'})
+        local groundColliders = world:queryRectangleArea(px - player.width/2, py + player.height/2, player.width, 1, {'Ground'})
         if #groundColliders > 0 then
             player.isOnGround = true
         else
             player.isOnGround = false
            
         end
+        
         
        
       
@@ -390,7 +392,7 @@ function love.draw()
             else
                 love.graphics.print("Mapa não carregado!", 400, 300)
             end
-        --world:draw() --desenha o mundo fisico
+        world:draw() --desenha o mundo fisico
         local spriteWidth = player.currentSprite:getWidth()
         local spriteHeight = player.currentSprite:getHeight()
         local scaleX = player.width_sprite / spriteWidth
