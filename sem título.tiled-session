@@ -29,6 +29,9 @@
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
+        "mapa/assets/coin.tsx": {
+            "scaleInDock": 1
+        },
         "mapa/assets/mapa.tmx": {
             "scale": 0.25,
             "selectedLayer": 0,
@@ -44,6 +47,9 @@
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
+        "mapa/assets/mapa.tmx#Decorations (32x32)": {
+            "dynamicWrapping": false
+        },
         "mapa/assets/mapa.tmx#Tiles": {
             "dynamicWrapping": false,
             "scaleInDock": 1
@@ -58,13 +64,24 @@
             "scaleInDock": 1.5
         },
         "mapa/assets/mapa.tmx#brush": {
+            "dynamicWrapping": false,
             "scaleInDock": 1.5
+        },
+        "mapa/assets/mapa.tmx#coin": {
+            "dynamicWrapping": true
+        },
+        "mapa/assets/mapa.tmx#dead_tree": {
+            "scaleInEditor": 1
+        },
+        "mapa/assets/mapa.tmx#rocket_item_extra": {
+            "scaleInEditor": 0.125
         },
         "mapa/assets/teste.tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 1
         }
     },
+    "last.externalTilesetPath": "C:/Users/gmant/OneDrive/Documentos/UFES/PAP/game/mapa/assets",
     "last.imagePath": "C:/Users/gmant/OneDrive/Documentos/UFES/PAP/game/mapa/assets",
     "openFiles": [
         "mapa/assets/mapa.tmx"
@@ -80,9 +97,12 @@
     ],
     "tileset.embedInMap": true,
     "tileset.lastUsedFormat": "tsx",
+    "tileset.margin": 0,
+    "tileset.spacing": 0,
     "tileset.tileSize": {
         "height": 32,
         "width": 32
     },
-    "tileset.type": 0
+    "tileset.type": 0,
+    "tileset.useTransparentColor": false
 }

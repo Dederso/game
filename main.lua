@@ -6,28 +6,30 @@ local tempoInicio = 0
 local tempoFinal = 0
 local jogoFinalizado = false
 
--- Modifique a função love.load() existente
-function love.load()
-    -- Seu código existente aqui
-    
-    -- Adicione esta linha para carregar a fonte do menu
+--[[
+    Função para desenhar o menu
+]] 
+function love.load()    
+    -- Adicione esta linha para carregar a fonte do menu =======================================================================
     menuFont = love.graphics.newFont(32)
-
--- Configurações iniciais do jogo ==========================================================================================
+    -- Carrega a imagem de fundo do menu ========================================================================================
+    menuBackground = love.graphics.newImage("assets/background_Menu.jpg")
+    -- Configurações iniciais do jogo ==========================================================================================
     love.window.setTitle("Lunatic Astronaut")
     love.graphics.setBackgroundColor(0.5, 0.5, 0.5)
     love.graphics.setDefaultFilter("nearest", "nearest")
 
--- Importa as bibliotecas ====================================================================================================
+    -- Importa as bibliotecas ====================================================================================================
     wf = require "libraries/windfield"
     sti = require "libraries/sti"
     cameralib = require "libraries/camera"
 
+    -- Cria o mundo físico =======================================================================================================
     camera = cameralib()
     world = wf.newWorld(0, 0, true)
     world:setGravity(0, 1000)
 
-    -- Lista de resoluções suportadas
+    -- Lista de resoluções suportadas ==========================================================================================
     resolutions = {
         {width = 1920, height = 1080}, -- Resolução mais alta
         {width = 1600, height = 900}, -- Resolução média
@@ -37,7 +39,7 @@ function love.load()
     media = resolutions[2]
     alta = resolutions[1]
 
--- Configura a janela do jogo ================================================================================================
+    -- Configura a janela do jogo ================================================================================================
     local screenWidth, screenHeight = love.window.getDesktopDimensions()
     resolution = {width = screenWidth, height = screenHeight}
     love.window.setMode(resolution.width, resolution.height, {
@@ -48,21 +50,22 @@ function love.load()
         fullscreen = true -- Adiciona a opção de tela cheia
     })
 
--- Carrega o mapa ===========================================================================================================
+    -- Carrega o mapa ===========================================================================================================
     map = sti("mapa/mapa.lua")    
--- Verifica se o mapa foi carregado corretamente
+    -- Verifica se o mapa foi carregado corretamente ==============================================================================
     if not map then
         print("Erro ao carregar o mapa!")
         love.event.quit()
         return
     end
 
--- Definir classes de colisão ===============================================================================================
+    -- Definir classes de colisão ===============================================================================================
     world:addCollisionClass('Player')
     world:addCollisionClass('Ground')
     world:addCollisionClass('objetivo extra 1',{ignores = {'Player'}})
     world:addCollisionClass('objetivo final',{ignores = {'Player'}})
--- Carrega os sprites do jogador ============================================================================================
+
+    -- Carrega os sprites do jogador ============================================================================================
     sprites = {
         idle_right = love.graphics.newImage("assets/Sprite_astronauta_idle_right.png"),
         idle_left = love.graphics.newImage("assets/Sprite_astronauta_idle_left.png"),
@@ -75,21 +78,24 @@ function love.load()
             love.graphics.newImage("assets/Sprite_astronauta_running_left_2.png")
         },
         jump_right = love.graphics.newImage("assets/Sprite_astronauta_jumping_right.png"),
-        jump_left = love.graphics.newImage("assets/Sprite_astronauta_jumping_left.png")
+        jump_left = love.graphics.newImage("assets/Sprite_astronauta_jumping_left.png"),
+        coin = love.graphics.newImage("assets/coin.png")
     }
 
+    -- Carrega os sons do jogo ================================================================================================
     sounds = {
         jump = love.audio.newSource("sounds/cartoon_jump.mp3", "static"),
         ambient = love.audio.newSource("sounds/ambient_sound.mp3", "stream"),
-        pick_up = love.audio.newSource("sounds/pick_up_item.mp3", "static")
+        pick_up = love.audio.newSource("sounds/pick_up_item.mp3", "static"),
+        step = love.audio.newSource("sounds/step.mp3", "static")
     }
 
-    -- Configuração das animações
+    -- Configuração das animações do jogador =================================================================================
     animations = {
         run_right = {frames = sprites.run_right, current = 1, timer = 0},
         run_left = {frames = sprites.run_left, current = 1, timer = 0}
     }
-
+    -- Configurações do jogador ===============================================================================================
     player = {
         width = 32,
         height = 63, --um pixel menos para que ele nao fique colidindo com 2 tiles para cima
@@ -105,7 +111,7 @@ function love.load()
         extra_objetivo = 0
     }
 
--- Cria a hitbox do jogador =================================================================================================
+    -- Cria a hitbox do jogador =================================================================================================
     local x = map.width * map.tilewidth / 2
     local y = map.height * map.tileheight * 0.96
     player.hitbox = world:newRectangleCollider(x, y, player.width, player.height)
@@ -113,7 +119,7 @@ function love.load()
     player.hitbox:setFixedRotation(true)
     player.hitbox:setFriction(0)
     
--- Cria colisões do mapa ================================================================================================
+    -- Cria colisões do mapa ================================================================================================
     if map.layers["colision"] then
         for _, object in ipairs(map.layers["colision"].objects) do
             local collider = world:newRectangleCollider(object.x, object.y, object.width, object.height)
@@ -151,7 +157,7 @@ function love.load()
     jogoFinalizado = false
 end
 
--- Função para verificar colisões laterais
+-- Função para verificar colisões laterais ===================================================================================
 function checkLateralCollisions(player)
     local px, py = player.hitbox:getPosition()
     local leftColliders = world:queryRectangleArea(
@@ -161,7 +167,6 @@ function checkLateralCollisions(player)
         player.height - 4, -- altura da área de verificação (4 pixels menor que o jogador)
         {'Ground'}
     )
-
     local rightColliders = world:queryRectangleArea(
         px + player.width/2, -- borda direita do jogador
         py - player.height/2 + 2, -- 2 pixels abaixo do topo do jogador
@@ -215,7 +220,7 @@ function love.update(dt)
                 end
             end
         end
-        -- Atualiza a animação
+        -- Atualiza a animação do jogador com base no estado atual ============================================================
         if player.isOnGround then
             if math.abs(vx) < 1 then
                 player.animationState = "idle"
@@ -243,7 +248,7 @@ function love.update(dt)
             vx = player.speed
             player.direction = 1
         end
-        -- Pulo do jogador com base na barra de carga
+        -- Pulo do jogador com base na barra de carga ===============================================================================
         if love.keyboard.isDown("space") or love.keyboard.isDown("w") or love.keyboard.isDown("up") then
             if player.isOnGround then
                 player.jumpCharge = (player.jumpCharge or 0) + dt
@@ -262,6 +267,7 @@ function love.update(dt)
             player.jumpCharge = 0
         end
 
+        -- Atualiza a animação de pulo do jogador ===============================================================================
         if not player.isOnGround then
             if player.direction == 1 then
                 player.sprite = sprites.jump_right
@@ -271,9 +277,6 @@ function love.update(dt)
                 
             end
         end
-
-        
-        
 
         -- Verifica colisão com o chão ==========================================================================================
         player.isOnGround = false
@@ -291,10 +294,10 @@ function love.update(dt)
            
         end
         
-        -- Verifica colisões laterais
+        -- Verifica colisões laterais do jogador =================================================================================
         local isCollidingLeft, isCollidingRight = checkLateralCollisions(player)
 
-        -- Adiciona informações de depuração
+        -- Adiciona informações de depuração ======================================================================================
         player.isCollidingLeft = isCollidingLeft
         player.isCollidingRight = isCollidingRight
 
@@ -321,7 +324,7 @@ function love.update(dt)
             camera.y = (ht - h/2)
         end
 
-        local freio = 10 -- velocidade de freio no chao (quanto menor, mais ele desliza)
+        local freio = 10 -- velocidade de freio no chao (quanto menor, mais ele desliza) ========================================
         if player.isOnGround and vx > freio then
             vx = vx - freio
         elseif player.isOnGround and vx < -freio then
@@ -361,9 +364,8 @@ end
 -- Desenha o jogo ===========================================================================================================
 function love.draw()
     if gameState == "playing" then
-        -- Seu código de desenho do jogo existente aqui
         camera:attach()
-            -- Desenha o mapa
+            -- Desenha o mapa do jogo ============================================================================================
             if map then
                 for i, layer in ipairs(map.layers) do
                     if layer.name ~= "colision" and layer.name ~= "objetivo extra 1" then
@@ -373,7 +375,7 @@ function love.draw()
                         for j, objeto in ipairs(objetivosExtras) do
                             if not objeto.collected then
                                 local x, y = objeto.collider:getPosition()
-                                love.graphics.rectangle("fill", x, y, objeto.w, objeto.h)
+                                love.graphics.draw(sprites.coin, x, y, 0, 1, 1, sprites.coin:getWidth()/2, sprites.coin:getHeight()/2)
                             end
                         end
                     end
@@ -402,7 +404,6 @@ function love.draw()
         -- Adiciona texto de depuração ===========================================================================================
         love.graphics.print("FPS: " .. tostring(love.timer.getFPS()), 10, 10)
 
-        
         -- Barra de fundo
         love.graphics.setColor(0.5, 0.5, 0.5)
         love.graphics.rectangle("fill", 10, love.graphics.getHeight() - 30, jumpChargeBarWidth, jumpChargeBarHeight)
@@ -425,6 +426,8 @@ function love.draw()
         end
     elseif gameState == "menu" then
         -- Desenhe o menu
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.draw(menuBackground, 0, 0)
         love.graphics.setFont(menuFont)
         for i, option in ipairs(menuOptions) do
             if i == selectedOption then
