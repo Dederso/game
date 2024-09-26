@@ -261,8 +261,12 @@ function love.update(dt)
         
 
         -- Verifica colisão com o chão ==========================================================================================
+<<<<<<< Updated upstream
         player.isOnGround = false
         local groundColliders = world:queryRectangleArea(px - player.width/2, py + player.height/2, player.width, 2, {'Ground'})
+=======
+        local groundColliders = world:queryRectangleArea(px - player.width/2, py + player.height/2 -2 , player.width, 4, {'Ground'})
+>>>>>>> Stashed changes
         if #groundColliders > 0 then
             player.isOnGround = true
             lastGroundTime = love.timer.getTime()
@@ -325,13 +329,8 @@ function love.update(dt)
             end
         end
         if player.hitbox:enter("objetivo final") then
-            for _, objetivo in ipairs(objetivosExtras) do
-                if player.hitbox:getEnterCollisionData('objetivo final').collider == objetivo.collider then
-                    tempoFinal = love.timer.getTime() - tempoInicio
-                    jogoFinalizado = true
-                    break
-                end
-            end
+            tempoFinal = love.timer.getTime() - tempoInicio
+            jogoFinalizado = true
         end
          -- Aplica a velocidade horizontal sempre, mas mantém a velocidade vertical atual se houver colisão lateral ========
          player.hitbox:setLinearVelocity(vx, vy)
@@ -471,7 +470,7 @@ function mudarResolucao()
     love.window.setMode(newResolution.width, newResolution.height, {
         fullscreen = isFullscreen,
         resizable = true,
-        vsync = true,
+        vsync = false,
         minwidth = 400,
         minheight = 300
     })
@@ -486,7 +485,7 @@ function alternarTelaCheia()
         love.window.setMode(currentResolution.width, currentResolution.height, {
             fullscreen = false,
             resizable = true,
-            vsync = true,
+            vsync = false,
             minwidth = 400,
             minheight = 300
         })
