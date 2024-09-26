@@ -234,6 +234,7 @@ function love.update(dt)
                     anim.timer = 0
                 end
                 player.currentSprite = anim.frames[anim.current]
+                love.audio.play(sounds.step)
             end
         else
             player.animationState = "jump"
