@@ -159,28 +159,28 @@ function love.load()
     jogoFinalizado = false
 end
 
--- Função para verificar colisões laterais ===================================================================================
+-- Modifique a função checkLateralCollisions para retornar apenas informações laterais
 function checkLateralCollisions(player)
     local px, py = player.hitbox:getPosition()
     local leftColliders = world:queryRectangleArea(
-        px - player.width/2 - 2, -- 2 pixels à esquerda do jogador
-        py - player.height/2 + 2, -- 2 pixels abaixo do topo do jogador
-        2, -- largura da área de verificação
-        player.height - 4, -- altura da área de verificação (4 pixels menor que o jogador)
+        px - player.width/2 - 2,
+        py - player.height/2,
+        2,
+        player.height,
         {'Ground'}
     )
     local rightColliders = world:queryRectangleArea(
-        px + player.width/2, -- borda direita do jogador
-        py - player.height/2 + 2, -- 2 pixels abaixo do topo do jogador
-        2, -- largura da área de verificação
-        player.height - 4, -- altura da área de verificação (4 pixels menor que o jogador)
+        px + player.width/2,
+        py - player.height/2,
+        2,
+        player.height,
         {'Ground'}
     )
-
-    local isCollidingLeft = #leftColliders > 0
-    local isCollidingRight = #rightColliders > 0
-
-    return isCollidingLeft, isCollidingRight
+    
+    return {
+        left = #leftColliders > 0,
+        right = #rightColliders > 0
+    }
 end
 
 -- Atualiza o jogo ==========================================================================================================
@@ -222,13 +222,9 @@ function love.update(dt)
                 end
             end
         end
-         -- Verifica colisões laterais do jogador =================================================================================
-        local isCollidingLeft, isCollidingRight = checkLateralCollisions(player)
+         -- Verifica colisões laterais do jogador
+        local collisions = checkLateralCollisions(player)
 
-        -- Adiciona informações de depuração ======================================================================================
-        player.isCollidingLeft = isCollidingLeft
-        player.isCollidingRight = isCollidingRight
-        
         -- Atualiza a animação do jogador com base no estado atual ============================================================
         if player.isOnGround then
             if math.abs(vx) < 1 then
@@ -339,20 +335,30 @@ function love.update(dt)
         elseif player.isOnGround then
             vx = 0
         end
-        -- Inverte a velocidade horizontal se houver colisão lateral ==========================================================
+        -- Modifique a lógica de movimento para lidar com colisões
+        local pushForce = player.speed -- Ajuste este valor conforme necessário
+
         if not player.isOnGround then
-            if player.isCollidingLeft then
-                vx = -vx 
-            elseif player.isCollidingRight then
-                vx = -vx
+            if collisions.left then
+                vx = math.max(pushForce, vx)  -- Empurra para a direita
+            elseif collisions.right then
+                vx = math.min(-pushForce, vx)  -- Empurra para a esquerda
+            end
+        else
+            -- Quando no chão, apenas ajuste a velocidade horizontal
+            if collisions.left then
+                vx = math.max(0, vx)
+            elseif collisions.right then
+                vx = math.min(0, vx)
             end
         end
+
         if player.hitbox:enter("objetivo final") then
             tempoFinal = love.timer.getTime() - tempoInicio
             jogoFinalizado = true
         end
-         -- Aplica a velocidade horizontal sempre, mas mantém a velocidade vertical atual se houver colisão lateral ========
-         player.hitbox:setLinearVelocity(vx, vy)
+         -- Aplica a velocidade
+        player.hitbox:setLinearVelocity(vx, vy)
     elseif gameState == "menu" then
         -- Lógica simples do menu
         if love.keyboard.isDown("up") then
