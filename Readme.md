@@ -2,6 +2,10 @@
 
 É um game criado em Lua, a fim de demonstrar o poder e flexibilidade da linguagem. Foram utilizadas a biblioteca **LOVE2D** e o software de criação de mapas **Tiled** e as sprites do mapa foram adiquiridas no site **itch.io**
 
+## Como baixar o Game
+
+Baixe o arquivo zip L_A.zip, extraia e abra o executavel
+
 ## Como Rodar o Programa
 
 **Windows:**
