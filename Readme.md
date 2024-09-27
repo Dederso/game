@@ -4,7 +4,7 @@
 
 ## Como Rodar o Programa
 
-**Windows**
+**Windows:**
 
 Baixe o arquivo 'L_A.zip' e execute o arquivo '.exe'
 
