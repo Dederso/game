@@ -5,8 +5,11 @@
 ## Como Rodar o Programa
 
 **Windows**
+
 Baixe o arquivo 'L_A.zip' e execute o arquivo '.exe'
+
 **Alternativamente:**
+
 Siga os passos abaixo para rodar o programa:
 
 1. **Instale o Lua:**
